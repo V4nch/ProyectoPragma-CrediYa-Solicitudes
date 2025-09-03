@@ -137,4 +137,21 @@ class RegisterLoanApplicationUseCaseTest {
                 .expectError(StatusNotFoundException.class)
                 .verify();
     }
+    @Test
+    void createLoanApplication_amountBelowMinimum() {
+        LoanApplication loanApplication = new LoanApplication();
+        loanApplication.setIdLoanType(50L);
+        loanApplication.setAmount(500.0);
+
+        LoanType loanType = new LoanType();
+        loanType.setIdLoanType(50L);
+        loanType.setMinimumAmount(1000.0);
+        loanType.setMaximumAmount(10000.0);
+
+        when(loanTypeRepository.findById(50L)).thenReturn(Mono.just(loanType));
+
+        StepVerifier.create(useCase.createLoanApplication(loanApplication))
+                .expectError(AmountOutOfRangeException.class)
+                .verify();
+    }
 }
