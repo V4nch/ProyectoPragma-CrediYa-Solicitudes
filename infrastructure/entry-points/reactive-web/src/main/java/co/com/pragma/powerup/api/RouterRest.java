@@ -1,5 +1,8 @@
 package co.com.pragma.powerup.api;
 
+import co.com.pragma.powerup.model.utils.Constants;
+import org.springdoc.core.annotations.RouterOperation;
+import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -12,9 +15,17 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @Configuration
 public class RouterRest {
     @Bean
-    public RouterFunction<ServerResponse> routerFunction(Handler handler) {
-        return route(GET("/api/usecase/path"), handler::listenGETUseCase)
-                .andRoute(POST("/api/usecase/otherpath"), handler::listenPOSTUseCase)
-                .and(route(GET("/api/otherusercase/path"), handler::listenGETOtherUseCase));
+    @RouterOperations({
+            @RouterOperation(
+                    path = Constants.PATH_LOAN_APPLICATION,
+                    produces = { Constants.CONTENT_TYPE },
+                    consumes = { Constants.CONTENT_TYPE },
+                    beanClass = LoanApplicationHandler.class,
+                    beanMethod = Constants.NAME_FUNCTION
+            )
+    })
+    public RouterFunction<ServerResponse> routerFunction(LoanApplicationHandler handler) {
+        return route(POST(Constants.PATH_LOAN_APPLICATION), handler::createLoanApplication);
+
     }
 }

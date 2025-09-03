@@ -6,8 +6,9 @@ import co.com.pragma.powerup.model.status.gateways.StatusRepository;
 import co.com.pragma.powerup.r2dbc.entity.StatusEntity;
 import co.com.pragma.powerup.r2dbc.helper.ReactiveAdapterOperations;
 import org.reactivecommons.utils.ObjectMapper;
+import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
-
+@Repository
 public class StatusRepositoryAdapter extends ReactiveAdapterOperations<
         Status,
         StatusEntity,

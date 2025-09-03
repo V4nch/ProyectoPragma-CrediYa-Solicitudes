@@ -41,6 +41,17 @@ subprojects {
         testCompileOnly  "org.projectlombok:lombok:${lombokVersion}"
         testAnnotationProcessor  "org.projectlombok:lombok:${lombokVersion}"
         implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+
+        implementation("org.springframework.boot:spring-boot-starter") {
+            exclude group: "org.springframework.boot", module: "spring-boot-starter-logging"
+        }
+
+        configurations {
+            all {
+                exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+            }
+        }
+        implementation "org.springframework.boot:spring-boot-starter-log4j2"
     }
 
     tasks.withType(Test).configureEach {

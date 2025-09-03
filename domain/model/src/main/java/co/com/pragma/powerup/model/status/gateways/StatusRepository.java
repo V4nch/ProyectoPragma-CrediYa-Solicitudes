@@ -6,5 +6,4 @@ import reactor.core.publisher.Mono;
 
 public interface StatusRepository {
     Mono<Status> findByName(String name);
-    Mono<Status> findById(Long idStatus);
 }

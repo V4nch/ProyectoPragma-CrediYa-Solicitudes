@@ -1,6 +1,7 @@
 package co.com.pragma.powerup.api.config;
 
 
+import co.com.pragma.powerup.model.utils.Constants;
 import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -14,12 +15,8 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI solicitudesOpenAPI() {
         return new OpenAPI()
-                .info(new Info().title("Solicitudes API")
-                        .description("API para gestionar solicitudes de préstamo en CrediYa")
-                        .version("v1.0")
-                        .license(new License().name("Apache 2.0").url("http://springdoc.org")))
-                .externalDocs(new ExternalDocumentation()
-                        .description("Documentación completa")
-                        .url("https://crediya.com/docs"));
+                .info(new Info().title(Constants.API_CREDIYA)
+                .version(Constants.VERSION_1)
+                .description(Constants.LOAN_APP_DESCRIPTION));
     }
 }

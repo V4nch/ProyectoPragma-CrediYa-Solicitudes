@@ -9,38 +9,43 @@ import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplicat
 import co.com.pragma.powerup.model.loantype.LoanType;
 import co.com.pragma.powerup.model.loantype.gateways.LoanTypeRepository;
 import co.com.pragma.powerup.model.status.gateways.StatusRepository;
+import co.com.pragma.powerup.model.utils.Constants;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
-
+@Log4j2
 @RequiredArgsConstructor
 public class RegisterLoanApplicationUseCase {
     private final LoanApplicationRepository loanApplicationRepository;
     private final LoanTypeRepository loanTypeRepository;
     private final StatusRepository statusRepository;
-    public Mono<ResponseLoanApplication> CreateLoanApplication(LoanApplication loanApplication){
+    public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication){
         return validateLoanType(loanApplication.getIdLoanType())
                 .flatMap(loanType -> validateAmount(loanApplication, loanType))
-                .flatMap(validRequest -> assignPendingStatus(validRequest))
+                .flatMap(this::assignPendingStatus)
                 .flatMap(this::saveApplication)
-                .onErrorResume(this::handleError);
+                .doOnSuccess(savedLoan ->
+                        log.info(Constants.LOG_LA_CREATE_SUCCESSFUL,savedLoan.getLoanApplication().getIdLoanType() ))
+                .doOnError(error ->
+                        log.error(Constants.LOG_LA_CREATE_ERROR, error.getMessage()));
     }
 
     private Mono<LoanType> validateLoanType(Long idLoanType) {
         return loanTypeRepository.findById(idLoanType)
-                .switchIfEmpty(Mono.error(new LoanTypeNotFoundException()));
+                .switchIfEmpty(Mono.error(new LoanTypeNotFoundException(Constants.LOAN_TYPE_NOT_FOUND_MESSAGE)));
     }
 
     private Mono<LoanApplication> validateAmount(LoanApplication loanApplication, LoanType loanType) {
         if (loanApplication.getAmount() < loanType.getMinimumAmount() ||
                 loanApplication.getAmount() > loanType.getMaximumAmount()) {
-            return Mono.error(new AmountOutOfRangeException());
+            return Mono.error(new AmountOutOfRangeException(Constants.LOAN_AMOUNT_OUT_RANGE_MESSAGE));
         }
         return Mono.just(loanApplication);
     }
 
     private Mono<LoanApplication> assignPendingStatus(LoanApplication loanApplication) {
-        return statusRepository.findByName(LoanConstants.STATUS_PENDING_REVIEW)
-                .switchIfEmpty(Mono.error(new StatusNotFoundException()))
+        return statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)
+                .switchIfEmpty(Mono.error(new StatusNotFoundException(Constants.STATUS_NOT_FOUND_MESSAGE)))
                 .map(status -> {
                     loanApplication.setIdStatus(status.getIdStatus());
                     return loanApplication;
@@ -49,13 +54,7 @@ public class RegisterLoanApplicationUseCase {
 
     private Mono<ResponseLoanApplication> saveApplication(LoanApplication loanApplication) {
         return loanApplicationRepository.save(loanApplication)
-                .flatMap(saved ->
-                        statusRepository.findById(saved.getIdStatus())
-                                .map(status -> new ResponseLoanApplication(saved, status.getName()))
+                    .map(la -> new ResponseLoanApplication(la, Constants.STATUS_PENDING_REVIEW)
                 );
-    }
-
-    private Mono<ResponseLoanApplication> handleError(Throwable e) {
-        return Mono.just(new ResponseLoanApplication(null, e.getMessage()));
     }
 }

@@ -14,7 +14,6 @@ import lombok.Setter;
 @Builder(toBuilder = true)
 public class LoanApplication {
 
-        private Long loanId;
         private String email;
         private Double amount;
         private Integer term;
