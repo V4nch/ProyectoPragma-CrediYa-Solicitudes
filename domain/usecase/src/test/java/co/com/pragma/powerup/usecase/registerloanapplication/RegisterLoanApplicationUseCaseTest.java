@@ -3,7 +3,6 @@ package co.com.pragma.powerup.usecase.registerloanapplication;
 import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
-import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
 import co.com.pragma.powerup.model.loantype.LoanType;
 import co.com.pragma.powerup.model.loantype.gateways.LoanTypeRepository;
 import co.com.pragma.powerup.model.status.Status;
