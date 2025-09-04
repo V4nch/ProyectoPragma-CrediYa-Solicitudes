@@ -123,8 +123,3 @@ public class LoanApplicationHandler {
     }
 
 }
-//private String email;
-//private Double amount;
-//private Integer term;
-//private Long idLoanType;
-//private Long idStatus;
