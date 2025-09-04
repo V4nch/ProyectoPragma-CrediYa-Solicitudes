@@ -19,6 +19,7 @@ public class RegisterLoanApplicationUseCase {
     private final LoanApplicationRepository loanApplicationRepository;
     private final LoanTypeRepository loanTypeRepository;
     private final StatusRepository statusRepository;
+
     public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication){
         return validateLoanType(loanApplication.getIdLoanType())
                 .flatMap(loanType -> validateAmount(loanApplication, loanType))
