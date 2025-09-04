@@ -12,4 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class User {
+    private String idCard;
+    private String emailAddress;
+
 }

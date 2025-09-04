@@ -2,6 +2,7 @@ package co.com.pragma.powerup.api;
 
 import co.com.pragma.powerup.api.exception.ErrorResponse;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
+import co.com.pragma.powerup.model.loanapplication.request.LoanApplicationRequest;
 import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
 import co.com.pragma.powerup.model.utils.Constants;
 import co.com.pragma.powerup.usecase.registerloanapplication.RegisterLoanApplicationUseCase;
@@ -110,12 +111,20 @@ public class LoanApplicationHandler {
     public Mono<ServerResponse> createLoanApplication(ServerRequest request) {
         log.info(Constants.LOG_LOAN_APP_RECEIVED);
 
-        return request.bodyToMono(LoanApplication.class)
-                .doOnNext(la -> log.debug(Constants.LOG_RECEIVED_DATA, la))
-                .flatMap(registerLoanApplicationUseCase::createLoanApplication)
-                .doOnSuccess(la -> log.info(Constants.LOG_LOAN_APP_CREATED, la.getStatusLoanApplication()))
-                .doOnError(error -> log.error(Constants.LOG_LOAN_APP_CREATION_ERROR, error.getMessage()))
-                .flatMap(la -> ServerResponse.ok().bodyValue(la));
+        return request.bodyToMono(LoanApplicationRequest.class)
+            .doOnNext(laReq -> log.debug(Constants.LOG_RECEIVED_DATA, laReq))
+            .flatMap(laReq -> registerLoanApplicationUseCase.createLoanApplication(
+                new LoanApplication(laReq.getAmount(),laReq.getTerm(),laReq.getIdLoanType()),
+                        laReq.getIdCard()
+            ))
+            .doOnSuccess(la -> log.info(Constants.LOG_LOAN_APP_CREATED, la.getStatusLoanApplication()))
+            .doOnError(error -> log.error(Constants.LOG_LOAN_APP_CREATION_ERROR, error.getMessage()))
+            .flatMap(la -> ServerResponse.ok().bodyValue(la));
     }
 
 }
+//private String email;
+//private Double amount;
+//private Integer term;
+//private Long idLoanType;
+//private Long idStatus;

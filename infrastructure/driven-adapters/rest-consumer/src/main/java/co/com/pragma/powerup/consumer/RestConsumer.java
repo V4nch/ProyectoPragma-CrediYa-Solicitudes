@@ -1,45 +1,39 @@
 package co.com.pragma.powerup.consumer;
 
+import co.com.pragma.powerup.consumer.dto.UserResponse;
+import co.com.pragma.powerup.consumer.mapper.UserMapper;
+import co.com.pragma.powerup.model.user.User;
+import co.com.pragma.powerup.model.user.gateways.UserRepository;
+import co.com.pragma.powerup.model.utils.Constants;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
-public class RestConsumer /* implements Gateway from domain */{
+public class RestConsumer implements UserRepository {
     private final WebClient client;
 
-
-    // these methods are an example that illustrates the implementation of WebClient.
-    // You should use the methods that you implement from the Gateway from the domain.
-    @CircuitBreaker(name = "testGet" /*, fallbackMethod = "testGetOk"*/)
-    public Mono<ObjectResponse> testGet() {
-        return client
-                .get()
+    @Override
+    public Mono<User> getUserById(String idCard) {
+        return client.get()
+                .uri(Constants.PATH_USER, idCard)
                 .retrieve()
-                .bodyToMono(ObjectResponse.class);
-    }
+                .bodyToMono(UserResponse.class)
+                .timeout(Duration.ofSeconds(5))
+                .map(UserMapper::toDomain)
+                .onErrorMap(throwable -> {
 
-// Possible fallback method
-//    public Mono<String> testGetOk(Exception ignored) {
-//        return client
-//                .get() // TODO: change for another endpoint or destination
-//                .retrieve()
-//                .bodyToMono(String.class);
-//    }
-
-    @CircuitBreaker(name = "testPost")
-    public Mono<ObjectResponse> testPost() {
-        ObjectRequest request = ObjectRequest.builder()
-            .val1("exampleval1")
-            .val2("exampleval2")
-            .build();
-        return client
-                .post()
-                .body(Mono.just(request), ObjectRequest.class)
-                .retrieve()
-                .bodyToMono(ObjectResponse.class);
+                    if (throwable instanceof WebClientResponseException) {
+                        return new RuntimeException(Constants.LOG_ERROR_USER + throwable.getMessage(), throwable);
+                    }
+                    return new RuntimeException(Constants.LOG_ERROR_GET_USER, throwable);
+                });
     }
 }

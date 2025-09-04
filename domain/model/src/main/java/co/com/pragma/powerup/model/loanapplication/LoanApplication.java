@@ -1,10 +1,5 @@
 package co.com.pragma.powerup.model.loanapplication;
-import lombok.Builder;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
+import lombok.*;
 
 
 @Getter
@@ -12,6 +7,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
+@ToString
 public class LoanApplication {
 
         private String email;
@@ -20,4 +16,9 @@ public class LoanApplication {
         private Long idLoanType;
         private Long idStatus;
 
+    public LoanApplication(Double amount, Integer term, Long idLoanType) {
+        this.amount = amount;
+        this.term = term;
+        this.idLoanType = idLoanType;
+    }
 }
