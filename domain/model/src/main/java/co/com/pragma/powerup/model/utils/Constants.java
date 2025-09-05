@@ -42,7 +42,7 @@ public class Constants {
     public static final String LOG_LOAN_APP_CREATED = "Loan application created with status: {}";
     public static final String LOG_LOAN_APP_CREATION_ERROR = "Error creating loan application: {}";
     public static final String LOG_ERROR_USER = "Error: ";
-    public static final String LOG_ERROR_GET_USER = "Error get user";
+    public static final String LOG_ERROR_GET_USER = "Error user not found";
     public static final String LOG_ERROR_GETTING_USER = "Error get user: {}";
     // ---------------------------
     // ROUTER OPERATION

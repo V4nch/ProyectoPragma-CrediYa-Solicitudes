@@ -24,7 +24,7 @@ public class RegisterLoanApplicationUseCase {
     private final UserRepository userRepository;
 
     public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication,String idCard){
-        return getUserById(loanApplication,idCard)
+        return getUserByIdCard(loanApplication,idCard)
                 .flatMap(loanApp -> validateLoanType(loanApp.getIdLoanType()))
                 .flatMap(loanType -> validateAmount(loanApplication, loanType))
                 .flatMap(this::assignPendingStatus)
@@ -35,8 +35,8 @@ public class RegisterLoanApplicationUseCase {
                         log.error(Constants.LOG_LA_CREATE_ERROR, error.getMessage()));
     }
 
-    private Mono<LoanApplication> getUserById(LoanApplication loanApplication, String idCard){
-        return userRepository.getUserById(idCard)
+    private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication, String idCard){
+        return userRepository.getUserByIdCard(idCard)
                 .onErrorMap(ex -> {
                     return  (ex instanceof UserNotFoundException)
                         ? ex : new UserNotFoundException(Constants.LOG_ERROR_GET_USER );

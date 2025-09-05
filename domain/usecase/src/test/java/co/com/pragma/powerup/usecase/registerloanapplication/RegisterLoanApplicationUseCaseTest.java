@@ -63,7 +63,7 @@ class RegisterLoanApplicationUseCaseTest {
         var user = new User();
         user.setEmailAddress("test@mail.com");
 
-        when(userRepository.getUserById("789")).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard("789")).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(80L)).thenReturn(Mono.just(loanType));
         when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.just(status));
         when(loanApplicationRepository.save(any(LoanApplication.class)))
@@ -88,7 +88,7 @@ class RegisterLoanApplicationUseCaseTest {
 
         User user = new User();
         user.setEmailAddress("test@mail.com");
-        when(userRepository.getUserById(anyString())).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard(anyString())).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(90L)).thenReturn(Mono.just(loanType));
         when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.empty());
 
@@ -104,7 +104,7 @@ class RegisterLoanApplicationUseCaseTest {
         loanApplication.setIdLoanType(20L);
         User user = new User();
         user.setEmailAddress("test@mail.com");
-        when(userRepository.getUserById(anyString())).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard(anyString())).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(20L)).thenReturn(Mono.empty());
 
         StepVerifier.create(useCase.createLoanApplication(loanApplication,""))
@@ -137,7 +137,7 @@ class RegisterLoanApplicationUseCaseTest {
         loanType.setMaximumAmount(10000.0);
         User user = new User();
         user.setEmailAddress("test@mail.com");
-        when(userRepository.getUserById(anyString())).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard(anyString())).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(30L)).thenReturn(Mono.just(loanType));
 
         StepVerifier.create(useCase.createLoanApplication(loanApplication,""))
@@ -163,7 +163,7 @@ class RegisterLoanApplicationUseCaseTest {
 
         User user = new User();
         user.setEmailAddress("test@mail.com");
-        when(userRepository.getUserById(anyString())).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard(anyString())).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(40L)).thenReturn(Mono.just(loanType));
         when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.empty());
 
@@ -184,7 +184,7 @@ class RegisterLoanApplicationUseCaseTest {
 
         User user = new User();
         user.setEmailAddress("test@mail.com");
-        when(userRepository.getUserById(anyString())).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard(anyString())).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(50L)).thenReturn(Mono.just(loanType));
 
         StepVerifier.create(useCase.createLoanApplication(loanApplication,""))
@@ -198,7 +198,7 @@ class RegisterLoanApplicationUseCaseTest {
         loanApplication.setIdLoanType(60L);
         loanApplication.setAmount(3000.0);
 
-        when(userRepository.getUserById("123"))
+        when(userRepository.getUserByIdCard("123"))
                 .thenReturn(Mono.error(new UserNotFoundException(Constants.LOG_ERROR_GET_USER)));
 
         StepVerifier.create(useCase.createLoanApplication(loanApplication,"123"))
@@ -211,7 +211,7 @@ class RegisterLoanApplicationUseCaseTest {
         loanApplication.setIdLoanType(70L);
         loanApplication.setAmount(3000.0);
 
-        when(userRepository.getUserById("456"))
+        when(userRepository.getUserByIdCard("456"))
                 .thenReturn(Mono.error(new RuntimeException("DB connection error")));
 
         StepVerifier.create(useCase.createLoanApplication(loanApplication,"456"))
@@ -252,11 +252,11 @@ class RegisterLoanApplicationUseCaseTest {
     void testCustomConstructor() {
         LoanApplication loanApplication = new LoanApplication(1500.0, 6, 7L);
 
-        assertNull(loanApplication.getEmail()); // porque este constructor no setea email
+        assertNull(loanApplication.getEmail());
         assertEquals(1500.0, loanApplication.getAmount());
         assertEquals(6, loanApplication.getTerm());
         assertEquals(7L, loanApplication.getIdLoanType());
-        assertNull(loanApplication.getIdStatus()); // tampoco setea status
+        assertNull(loanApplication.getIdStatus());
     }
 
     @Test
@@ -291,7 +291,7 @@ class RegisterLoanApplicationUseCaseTest {
                 .build();
 
         assertEquals("original@mail.com", modified.getEmail());
-        assertEquals(2000.0, modified.getAmount()); // cambiado
+        assertEquals(2000.0, modified.getAmount());
         assertEquals(12, modified.getTerm());
         assertEquals(1L, modified.getIdLoanType());
         assertEquals(2L, modified.getIdStatus());

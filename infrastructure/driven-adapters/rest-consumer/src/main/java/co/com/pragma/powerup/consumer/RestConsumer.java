@@ -21,7 +21,7 @@ public class RestConsumer implements UserRepository {
     private final WebClient client;
 
     @Override
-    public Mono<User> getUserById(String idCard) {
+    public Mono<User> getUserByIdCard(String idCard) {
         return client.get()
                 .uri(Constants.PATH_USER, idCard)
                 .retrieve()
