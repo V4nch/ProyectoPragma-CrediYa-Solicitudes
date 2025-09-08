@@ -1,7 +1,7 @@
 package co.com.pragma.powerup.model.utils;
 
 public class Constants {
-    public static final String STATUS_PENDING_REVIEW = "Pendiente de revisión";
+    public static final String STATUS_PENDING_REVIEW = "Pendiente de revision";
     private Constants() {
         throw new IllegalStateException("Utility class");
     }
@@ -24,6 +24,7 @@ public class Constants {
     public static final String CODE_400 = "400";
     public static final String CODE_404 = "404";
     public static final String CODE_500 = "500";
+    public static final String PATH_USER = "/usuarios/{id}";
 
 
 
@@ -40,6 +41,9 @@ public class Constants {
     public static final String LOG_RECEIVED_DATA = "Received data: {}";
     public static final String LOG_LOAN_APP_CREATED = "Loan application created with status: {}";
     public static final String LOG_LOAN_APP_CREATION_ERROR = "Error creating loan application: {}";
+    public static final String LOG_ERROR_USER = "Error: ";
+    public static final String LOG_ERROR_GET_USER = "Error user not found";
+    public static final String LOG_ERROR_GETTING_USER = "Error get user: {}";
     // ---------------------------
     // ROUTER OPERATION
     // ---------------------------
@@ -56,6 +60,7 @@ public class Constants {
     public static final String DB_ACCESS_ERROR = "Database access error";
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
     public static final String UNEXPECTED_ERROR = "An unexpected error has occurred";
+    public static final String USER_NOT_FOUND = "USER_NOT_FOUND";
     // ---------------------------
     // SUCCESS RESPONSES
     // ---------------------------
@@ -69,12 +74,12 @@ public class Constants {
                         "term": 36,
                         "idLoanType": 1
                         },
-                  "statusLoanApplication": "Pendiente de revisión"
+                  "statusLoanApplication": "Pendiente de revision"
             }
             """;
     public static final String EXAMPLE_LOAN_APP_REQUEST_VALUE = """
             {
-                "email" : "IvanM@gm.com",
+                "idCard" : "1094123321",
                 "amount" : 1500000,
                 "term": 36,
                 "idLoanType": 1

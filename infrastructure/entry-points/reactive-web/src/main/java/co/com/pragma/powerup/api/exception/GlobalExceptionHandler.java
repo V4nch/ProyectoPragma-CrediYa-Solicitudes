@@ -4,6 +4,7 @@ package co.com.pragma.powerup.api.exception;
 import co.com.pragma.powerup.model.exceptions.AmountOutOfRangeException;
 import co.com.pragma.powerup.model.exceptions.LoanTypeNotFoundException;
 import co.com.pragma.powerup.model.exceptions.StatusNotFoundException;
+import co.com.pragma.powerup.model.exceptions.UserNotFoundException;
 import co.com.pragma.powerup.model.utils.Constants;
 import io.r2dbc.spi.R2dbcDataIntegrityViolationException;
 import lombok.extern.log4j.Log4j2;
@@ -31,6 +32,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(Constants.STATUS_NOT_FOUND, ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
+        log.warn(Constants.LOG_ERROR_GETTING_USER, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(Constants.USER_NOT_FOUND, ex.getMessage()));
     }
 
     @ExceptionHandler(AmountOutOfRangeException.class)

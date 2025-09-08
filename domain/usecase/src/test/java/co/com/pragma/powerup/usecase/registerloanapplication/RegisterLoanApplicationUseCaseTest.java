@@ -3,11 +3,12 @@ package co.com.pragma.powerup.usecase.registerloanapplication;
 import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
-import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
 import co.com.pragma.powerup.model.loantype.LoanType;
 import co.com.pragma.powerup.model.loantype.gateways.LoanTypeRepository;
 import co.com.pragma.powerup.model.status.Status;
 import co.com.pragma.powerup.model.status.gateways.StatusRepository;
+import co.com.pragma.powerup.model.user.User;
+import co.com.pragma.powerup.model.user.gateways.UserRepository;
 import co.com.pragma.powerup.model.utils.Constants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,58 +28,86 @@ class RegisterLoanApplicationUseCaseTest {
     private LoanTypeRepository loanTypeRepository;
     private StatusRepository statusRepository;
     private RegisterLoanApplicationUseCase useCase;
+    private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
         loanApplicationRepository = mock(LoanApplicationRepository.class);
         loanTypeRepository = mock(LoanTypeRepository.class);
         statusRepository = mock(StatusRepository.class);
+        userRepository = mock(UserRepository.class);
 
         useCase = new RegisterLoanApplicationUseCase(
                 loanApplicationRepository,
                 loanTypeRepository,
-                statusRepository
+                statusRepository,
+                userRepository
         );
     }
 
     @Test
-    void createLoanApplication_success() {
+    void createLoanApplication_setsUserEmail() {
         LoanApplication loanApplication = new LoanApplication();
-        loanApplication.setIdLoanType(10L);
-        loanApplication.setAmount(5000.0);
+        loanApplication.setIdLoanType(80L);
+        loanApplication.setAmount(3000.0);
 
         LoanType loanType = new LoanType();
-        loanType.setIdLoanType(10L);
+        loanType.setIdLoanType(80L);
         loanType.setMinimumAmount(1000.0);
         loanType.setMaximumAmount(10000.0);
 
-        Status pendingStatus = new Status();
-        pendingStatus.setIdStatus(99L);
-        pendingStatus.setName(Constants.STATUS_PENDING_REVIEW);
+        Status status = new Status();
+        status.setIdStatus(1L);
+        status.setName(Constants.STATUS_PENDING_REVIEW);
 
-        when(loanTypeRepository.findById(10L)).thenReturn(Mono.just(loanType));
-        when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.just(pendingStatus));
+        var user = new User();
+        user.setEmailAddress("test@mail.com");
+
+        when(userRepository.getUserByIdCard("789")).thenReturn(Mono.just(user));
+        when(loanTypeRepository.findById(80L)).thenReturn(Mono.just(loanType));
+        when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.just(status));
         when(loanApplicationRepository.save(any(LoanApplication.class)))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication))
-                .expectNextMatches(response -> {
-                    return response.getLoanApplication().getAmount().equals(5000.0)
-                            && response.getStatusLoanApplication().equals(Constants.STATUS_PENDING_REVIEW);
-                })
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"789"))
+                .expectNextMatches(response ->
+                        "test@mail.com".equals(response.getLoanApplication().getEmail()))
                 .verifyComplete();
-        verify(statusRepository).findByName(Constants.STATUS_PENDING_REVIEW);
-        verify(loanApplicationRepository).save(any(LoanApplication.class));
+    }
+
+    @Test
+    void createLoanApplication_statusNotFound_messageCheck() {
+        LoanApplication loanApplication = new LoanApplication();
+        loanApplication.setIdLoanType(90L);
+        loanApplication.setAmount(2000.0);
+
+        LoanType loanType = new LoanType();
+        loanType.setIdLoanType(90L);
+        loanType.setMinimumAmount(1000.0);
+        loanType.setMaximumAmount(10000.0);
+
+        User user = new User();
+        user.setEmailAddress("test@mail.com");
+        when(userRepository.getUserByIdCard(anyString())).thenReturn(Mono.just(user));
+        when(loanTypeRepository.findById(90L)).thenReturn(Mono.just(loanType));
+        when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,""))
+                .expectErrorSatisfies(error ->
+                        assertEquals(Constants.STATUS_NOT_FOUND_MESSAGE, error.getMessage()))
+                .verify();
     }
 
     @Test
     void createLoanApplication_loanTypeNotFound() {
         LoanApplication loanApplication = new LoanApplication();
         loanApplication.setIdLoanType(20L);
-
+        User user = new User();
+        user.setEmailAddress("test@mail.com");
+        when(userRepository.getUserByIdCard(anyString())).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(20L)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,""))
                 .expectError(LoanTypeNotFoundException.class)
                 .verify();
     }
@@ -106,13 +135,15 @@ class RegisterLoanApplicationUseCaseTest {
         loanType.setIdLoanType(30L);
         loanType.setMinimumAmount(1000.0);
         loanType.setMaximumAmount(10000.0);
-
+        User user = new User();
+        user.setEmailAddress("test@mail.com");
+        when(userRepository.getUserByIdCard(anyString())).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(30L)).thenReturn(Mono.just(loanType));
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,""))
                 .expectError(AmountOutOfRangeException.class)
                 .verify();
-        StepVerifier.create(useCase.createLoanApplication(loanApplication))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,""))
                 .expectErrorSatisfies(error -> {
                     assertEquals(Constants.LOAN_AMOUNT_OUT_RANGE_MESSAGE, error.getMessage());
                 })
@@ -130,10 +161,13 @@ class RegisterLoanApplicationUseCaseTest {
         loanType.setMinimumAmount(1000.0);
         loanType.setMaximumAmount(10000.0);
 
+        User user = new User();
+        user.setEmailAddress("test@mail.com");
+        when(userRepository.getUserByIdCard(anyString())).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(40L)).thenReturn(Mono.just(loanType));
         when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,""))
                 .expectError(StatusNotFoundException.class)
                 .verify();
     }
@@ -148,10 +182,133 @@ class RegisterLoanApplicationUseCaseTest {
         loanType.setMinimumAmount(1000.0);
         loanType.setMaximumAmount(10000.0);
 
+        User user = new User();
+        user.setEmailAddress("test@mail.com");
+        when(userRepository.getUserByIdCard(anyString())).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(50L)).thenReturn(Mono.just(loanType));
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,""))
                 .expectError(AmountOutOfRangeException.class)
                 .verify();
+    }
+
+    @Test
+    void createLoanApplication_userNotFound() {
+        LoanApplication loanApplication = new LoanApplication();
+        loanApplication.setIdLoanType(60L);
+        loanApplication.setAmount(3000.0);
+
+        when(userRepository.getUserByIdCard("123"))
+                .thenReturn(Mono.error(new UserNotFoundException(Constants.LOG_ERROR_GET_USER)));
+
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"123"))
+                .expectError(UserNotFoundException.class)
+                .verify();
+    }
+    @Test
+    void createLoanApplication_userRepoThrowsUnexpectedError() {
+        LoanApplication loanApplication = new LoanApplication();
+        loanApplication.setIdLoanType(70L);
+        loanApplication.setAmount(3000.0);
+
+        when(userRepository.getUserByIdCard("456"))
+                .thenReturn(Mono.error(new RuntimeException("DB connection error")));
+
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"456"))
+                .expectError(UserNotFoundException.class)
+                .verify();
+    }
+    @Test
+    void testGettersAndSetters() {
+        LoanApplication loanApplication = new LoanApplication();
+
+        loanApplication.setEmail("test@mail.com");
+        loanApplication.setAmount(5000.0);
+        loanApplication.setTerm(12);
+        loanApplication.setIdLoanType(1L);
+        loanApplication.setIdStatus(2L);
+
+        assertEquals("test@mail.com", loanApplication.getEmail());
+        assertEquals(5000.0, loanApplication.getAmount());
+        assertEquals(12, loanApplication.getTerm());
+        assertEquals(1L, loanApplication.getIdLoanType());
+        assertEquals(2L, loanApplication.getIdStatus());
+    }
+
+    @Test
+    void testAllArgsConstructor() {
+        LoanApplication loanApplication = new LoanApplication(
+                "test@mail.com", 3000.0, 24, 5L, 10L
+        );
+
+        assertEquals("test@mail.com", loanApplication.getEmail());
+        assertEquals(3000.0, loanApplication.getAmount());
+        assertEquals(24, loanApplication.getTerm());
+        assertEquals(5L, loanApplication.getIdLoanType());
+        assertEquals(10L, loanApplication.getIdStatus());
+    }
+
+    @Test
+    void testCustomConstructor() {
+        LoanApplication loanApplication = new LoanApplication(1500.0, 6, 7L);
+
+        assertNull(loanApplication.getEmail());
+        assertEquals(1500.0, loanApplication.getAmount());
+        assertEquals(6, loanApplication.getTerm());
+        assertEquals(7L, loanApplication.getIdLoanType());
+        assertNull(loanApplication.getIdStatus());
+    }
+
+    @Test
+    void testBuilder() {
+        LoanApplication loanApplication = LoanApplication.builder()
+                .email("builder@mail.com")
+                .amount(7500.0)
+                .term(18)
+                .idLoanType(20L)
+                .idStatus(30L)
+                .build();
+
+        assertEquals("builder@mail.com", loanApplication.getEmail());
+        assertEquals(7500.0, loanApplication.getAmount());
+        assertEquals(18, loanApplication.getTerm());
+        assertEquals(20L, loanApplication.getIdLoanType());
+        assertEquals(30L, loanApplication.getIdStatus());
+    }
+
+    @Test
+    void testToBuilder() {
+        LoanApplication original = LoanApplication.builder()
+                .email("original@mail.com")
+                .amount(1000.0)
+                .term(12)
+                .idLoanType(1L)
+                .idStatus(2L)
+                .build();
+
+        LoanApplication modified = original.toBuilder()
+                .amount(2000.0)
+                .build();
+
+        assertEquals("original@mail.com", modified.getEmail());
+        assertEquals(2000.0, modified.getAmount());
+        assertEquals(12, modified.getTerm());
+        assertEquals(1L, modified.getIdLoanType());
+        assertEquals(2L, modified.getIdStatus());
+    }
+
+    @Test
+    void testToStringContainsClassName() {
+        LoanApplication loanApplication = LoanApplication.builder()
+                .email("string@mail.com")
+                .amount(1234.0)
+                .term(10)
+                .idLoanType(3L)
+                .idStatus(4L)
+                .build();
+
+        String toString = loanApplication.toString();
+        assertTrue(toString.contains("LoanApplication"));
+        assertTrue(toString.contains("string@mail.com"));
     }
 }
