@@ -25,6 +25,16 @@ public class Constants {
     public static final String CODE_404 = "404";
     public static final String CODE_500 = "500";
     public static final String PATH_USER = "/usuarios/{id}";
+    public static final String SWAGGER_UI_HTML = "/swagger-ui.html";
+    public static final String SWAGGER_UI_ALL = "/swagger-ui/**";
+    public static final String V3_API_DOCS = "/v3/api-docs/**";
+    public static final String WEBJARS = "/webjars/**";
+    public static final String ROLE_CLIENT = "CLIENTE";
+    public static final String BEARER_AUTH = "BearerAuth";
+    public static final String BEARER = "bearer";
+    public static final String JWT = "JWT";
+    public static final String AUTHORIZATION = "Authorization";
+    public static final String USER_ID_CARD_MISMATCH = "ID Card mismatch: provided '%s' does not match expected '%s'.";
 
 
 
