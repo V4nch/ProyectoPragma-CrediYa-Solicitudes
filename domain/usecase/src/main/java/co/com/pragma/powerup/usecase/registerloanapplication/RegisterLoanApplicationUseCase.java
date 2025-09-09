@@ -1,9 +1,6 @@
 package co.com.pragma.powerup.usecase.registerloanapplication;
 
-import co.com.pragma.powerup.model.exceptions.AmountOutOfRangeException;
-import co.com.pragma.powerup.model.exceptions.LoanTypeNotFoundException;
-import co.com.pragma.powerup.model.exceptions.StatusNotFoundException;
-import co.com.pragma.powerup.model.exceptions.UserNotFoundException;
+import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
@@ -23,8 +20,8 @@ public class RegisterLoanApplicationUseCase {
     private final StatusRepository statusRepository;
     private final UserRepository userRepository;
 
-    public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication,String idCard){
-        return getUserByIdCard(loanApplication,idCard)
+    public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication,String idCard, String token, String idCardFromToken){
+        return getUserByIdCard(loanApplication, idCard, token, idCardFromToken)
                 .flatMap(loanApp -> validateLoanType(loanApp.getIdLoanType()))
                 .flatMap(loanType -> validateAmount(loanApplication, loanType))
                 .flatMap(this::assignPendingStatus)
@@ -35,17 +32,16 @@ public class RegisterLoanApplicationUseCase {
                         log.error(Constants.LOG_LA_CREATE_ERROR, error.getMessage()));
     }
 
-    private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication, String idCard){
-        return userRepository.getUserByIdCard(idCard)
-                .onErrorMap(ex -> {
-                    return  (ex instanceof UserNotFoundException)
-                        ? ex : new UserNotFoundException(Constants.LOG_ERROR_GET_USER );
-                })
-                .map(user1 -> {
-                        loanApplication.setEmail(user1.getEmailAddress());
-                return loanApplication;
+    private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication, String idCard, String token,String idCardFromToken){
+        return userRepository.getUserByIdCard(idCard, token)
+                .switchIfEmpty(Mono.error(new UserNotFoundException(Constants.LOG_ERROR_GET_USER)))
+                .flatMap(user -> {
+                    if (!user.getIdCard().equals(idCardFromToken)) {
+                        return Mono.error(new UserIdCardMismatchException(user.getIdCard(), idCardFromToken));
+                    }
+                    loanApplication.setEmail(user.getEmailAddress());
+                    return Mono.just(loanApplication);
                 });
-
     }
 
     private Mono<LoanType> validateLoanType(Long idLoanType) {

@@ -1,5 +1,6 @@
 package co.com.pragma.powerup.consumer.config;
 
+import co.com.pragma.powerup.model.utils.Constants;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,8 +22,8 @@ public class RestConsumerConfig {
 
     private final int timeout;
 
-    public RestConsumerConfig(@Value("${adapter.restconsumer.url}") String url,
-                              @Value("${adapter.restconsumer.timeout}") int timeout) {
+    public RestConsumerConfig(@Value(Constants.ADAPTER_URL) String url,
+                              @Value(Constants.ADAPTER_TIMEOUT) int timeout) {
         this.url = url;
         this.timeout = timeout;
     }
@@ -31,15 +32,14 @@ public class RestConsumerConfig {
     public WebClient getWebClient(WebClient.Builder builder) {
         return builder
             .baseUrl(url)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, Constants.CONTENT_TYPE)
             .clientConnector(getClientHttpConnector())
             .build();
     }
 
     private ClientHttpConnector getClientHttpConnector() {
-        /*
-        IF YO REQUIRE APPEND SSL CERTIFICATE SELF SIGNED: this should be in the default cacerts trustore
-        */
+
+
         return new ReactorClientHttpConnector(HttpClient.create()
                 .compress(true)
                 .keepAlive(true)

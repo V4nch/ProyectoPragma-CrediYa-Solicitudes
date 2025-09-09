@@ -21,9 +21,14 @@ public class RestConsumer implements UserRepository {
     private final WebClient client;
 
     @Override
-    public Mono<User> getUserByIdCard(String idCard) {
+    public Mono<User> getUserByIdCard(String idCard,String token) {
+        System.out.println(" Este es el TOKEN "+token);
         return client.get()
                 .uri(Constants.PATH_USER, idCard)
+                .headers(headers -> {
+                    // Agregar el token aquí
+                    headers.setBearerAuth(token); // getToken() devuelve tu JWT
+                })
                 .retrieve()
                 .bodyToMono(UserResponse.class)
                 .timeout(Duration.ofSeconds(5))

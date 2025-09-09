@@ -28,6 +28,7 @@ public class LoanApplicationHandler {
     @Operation(
         summary =Constants.SUMMARY_REGISTER_LOAN_APP,
         description =Constants.DESCRIPTION_REGISTER_LOAN_APP,
+            security = {},
         requestBody = @RequestBody(
             required = true,
             content = @Content(
@@ -110,12 +111,14 @@ public class LoanApplicationHandler {
     )
     public Mono<ServerResponse> createLoanApplication(ServerRequest request) {
         log.info(Constants.LOG_LOAN_APP_RECEIVED);
-
+        var exchange = request.exchange();
+        String idCardFromToken = exchange.getAttribute("idCard");
+        String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
         return request.bodyToMono(LoanApplicationRequest.class)
             .doOnNext(laReq -> log.debug(Constants.LOG_RECEIVED_DATA, laReq))
             .flatMap(laReq -> registerLoanApplicationUseCase.createLoanApplication(
                 new LoanApplication(laReq.getAmount(),laReq.getTerm(),laReq.getIdLoanType()),
-                        laReq.getIdCard()
+                        laReq.getIdCard(), authHeader.replace("Bearer ", ""),idCardFromToken
             ))
             .doOnSuccess(la -> log.info(Constants.LOG_LOAN_APP_CREATED, la.getStatusLoanApplication()))
             .doOnError(error -> log.error(Constants.LOG_LOAN_APP_CREATION_ERROR, error.getMessage()))

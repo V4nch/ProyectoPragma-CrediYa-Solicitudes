@@ -1,10 +1,7 @@
 package co.com.pragma.powerup.api.exception;
 
 
-import co.com.pragma.powerup.model.exceptions.AmountOutOfRangeException;
-import co.com.pragma.powerup.model.exceptions.LoanTypeNotFoundException;
-import co.com.pragma.powerup.model.exceptions.StatusNotFoundException;
-import co.com.pragma.powerup.model.exceptions.UserNotFoundException;
+import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.utils.Constants;
 import io.r2dbc.spi.R2dbcDataIntegrityViolationException;
 import lombok.extern.log4j.Log4j2;
@@ -42,12 +39,20 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(Constants.USER_NOT_FOUND, ex.getMessage()));
     }
 
+
     @ExceptionHandler(AmountOutOfRangeException.class)
     public ResponseEntity<ErrorResponse> handleAmountOutOfRange(AmountOutOfRangeException ex) {
         log.warn(Constants.LOG_AMOUNT_OUT_OF_RANGE, ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(Constants.BAD_REQUEST, ex.getMessage()));
+    }
+    @ExceptionHandler(UserIdCardMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleUserIdCardMismatch(UserIdCardMismatchException ex) {
+        log.warn(Constants.LOG_USER_ID_CARD_MISMATCH, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(Constants.FORBIDDEN, ex.getMessage()));
     }
 
     @ExceptionHandler(R2dbcDataIntegrityViolationException.class)
