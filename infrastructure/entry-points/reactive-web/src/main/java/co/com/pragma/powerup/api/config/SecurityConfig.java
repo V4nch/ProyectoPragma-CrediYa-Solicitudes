@@ -15,19 +15,17 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, JwtAuthFilter jwtAuthFilter) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable) // <- Deshabilita Basic Auth
-                .formLogin(ServerHttpSecurity.FormLoginSpec::disable) // <- Deshabilita Form Login
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(ex -> ex
-                        // Swagger público
                         .pathMatchers(
-                                "/swagger-ui/index.html",
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/webjars/**"
+                                Constants.SWAGGER_INDEX,
+                                Constants.SWAGGER_UI_HTML,
+                                Constants.SWAGGER_UI_ALL,
+                                Constants.V3_API_DOCS,
+                                Constants.WEBJARS
                         ).permitAll()
-                        // Endpoints protegidos
-                        .pathMatchers(Constants.PATH_LOAN_APPLICATION).hasRole("cliente")
+                        .pathMatchers(Constants.PATH_LOAN_APPLICATION).hasRole(Constants.ROLE_CLIENT)
                         .anyExchange().permitAll()
                 )
                 .addFilterAt(jwtAuthFilter, SecurityWebFiltersOrder.AUTHENTICATION)
