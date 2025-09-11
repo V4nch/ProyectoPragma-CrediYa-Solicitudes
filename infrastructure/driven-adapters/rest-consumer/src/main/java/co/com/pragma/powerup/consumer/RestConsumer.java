@@ -22,12 +22,11 @@ public class RestConsumer implements UserRepository {
 
     @Override
     public Mono<User> getUserByIdCard(String idCard,String token) {
-        System.out.println(" Este es el TOKEN "+token);
         return client.get()
                 .uri(Constants.PATH_USER, idCard)
                 .headers(headers -> {
-                    // Agregar el token aquí
-                    headers.setBearerAuth(token); // getToken() devuelve tu JWT
+
+                    headers.setBearerAuth(token);
                 })
                 .retrieve()
                 .bodyToMono(UserResponse.class)
