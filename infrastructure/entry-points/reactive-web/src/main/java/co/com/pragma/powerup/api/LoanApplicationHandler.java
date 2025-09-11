@@ -30,6 +30,7 @@ public class LoanApplicationHandler {
     private final LoanApplicationUseCase loanApplicationUseCase;
 
 
+
     @Operation(
         summary =Constants.SUMMARY_REGISTER_LOAN_APP,
         description =Constants.DESCRIPTION_REGISTER_LOAN_APP,
@@ -149,8 +150,8 @@ public class LoanApplicationHandler {
             ),
             @Parameter(
                 name = "filter",
-                description = "Search filter by applicant email or name",
-                example = "john.doe",
+                description = "Search filter by applicant loan type name, email or status name",
+                example = "",
                 required = false,
                 in = ParameterIn.QUERY
             )
@@ -215,10 +216,16 @@ public class LoanApplicationHandler {
         int size = Integer.parseInt(request.queryParam("size").orElse("10"));
         String filter = request.queryParam("filter").orElse("");
 
-        return loanApplicationUseCase.execute(page, size, filter)
-                .flatMap(response -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(response));
+        log.info(Constants.LOG_GET_LOAN_APP_REQUEST, page, size, filter);
+
+        return loanApplicationUseCase.getLoanApp(page, size, filter)
+                .flatMap(response -> {
+                    log.info(Constants.LOG_GET_LOAN_APP_SUCCESS, response.getTotalItems());
+                    return ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(response);
+                })
+                .doOnError(error -> log.error(Constants.LOG_GET_LOAN_APP_ERROR, error.getMessage(), error));
     }
 
 }

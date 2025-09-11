@@ -55,13 +55,6 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(Constants.BAD_REQUEST, ex.getMessage()));
     }
 
-    @ExceptionHandler(InvalidFilterException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidFilter(InvalidFilterException ex) {
-        log.warn(Constants.LOG_INVALID_FILTER_ERROR, ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(Constants.BAD_REQUEST, ex.getMessage()));
-    }
 
     @ExceptionHandler(AmountOutOfRangeException.class)
     public ResponseEntity<ErrorResponse> handleAmountOutOfRange(AmountOutOfRangeException ex) {
@@ -103,11 +96,4 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(Constants.INTERNAL_ERROR, Constants.UNEXPECTED_ERROR));
     }
 
-    @ExceptionHandler(LoanApplicationRepositoryException.class)
-    public ResponseEntity<ErrorResponse> handleLoanApplicationRepository(LoanApplicationRepositoryException ex) {
-        log.error(Constants.LOG_GENERAL_ERROR, ex.getMessage(), ex);
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse(Constants.INTERNAL_ERROR, Constants.UNEXPECTED_ERROR));
-    }
 }

@@ -13,8 +13,10 @@ public class LoanApplicationListItem {
     private Double amount;
     private Integer term;
     private String email;
+    private String userName;
     private String loanTypeName;
     private Double interestRate;
     private String statusName;
     private String baseSalary;
+    private String monthlyRequestedAmount;
 }

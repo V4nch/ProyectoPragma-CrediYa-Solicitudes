@@ -31,29 +31,16 @@ public class LoanApplicationUseCase {
                 .flatMap(this::saveApplication);
     }
 
-    public Mono<PageResponse<LoanApplicationListItem>> execute(int page, int size, String filter) {
+    public Mono<PageResponse<LoanApplicationListItem>> getLoanApp(int page, int size, String filter) {
 
-
-        validateParameters(page, size, filter);
+        if (page < 0 || size <= 0) {
+            return Mono.error(new InvalidPaginationParametersException(
+                    Constants.ERROR_INVALID_PAGINATION));
+        }
 
         return loanApplicationRepository.findPending(page, size, filter)
                 .switchIfEmpty(Mono.error(new NoLoanApplicationsFoundException(
-                        Constants.ERROR_NO_RESULTS)))
-                .doOnError(this::handleRepositoryError);
-    }
-
-    private void validateParameters(int page, int size, String filter) {
-        if (page < 0 || size <= 0)
-            throw new InvalidPaginationParametersException(
-                    Constants.ERROR_INVALID_PAGINATION);
-        if (filter == null)
-            throw new InvalidFilterException(
-                    Constants.ERROR_INVALID_FILTER);
-    }
-
-    private void handleRepositoryError(Throwable error) {
-        throw new LoanApplicationRepositoryException(
-                Constants.ERROR_REPOSITORY, error);
+                        Constants.ERROR_NO_RESULTS)));
     }
 
     private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication, String idCard, String token,String idCardFromToken){

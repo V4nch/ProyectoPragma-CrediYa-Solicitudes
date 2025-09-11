@@ -3,6 +3,8 @@ package co.com.pragma.powerup.usecase.loanapplication;
 import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
+import co.com.pragma.powerup.model.loanapplication.response.LoanApplicationListItem;
+import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
 import co.com.pragma.powerup.model.loantype.LoanType;
 import co.com.pragma.powerup.model.loantype.gateways.LoanTypeRepository;
 import co.com.pragma.powerup.model.status.Status;
@@ -16,6 +18,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -44,6 +47,7 @@ class RegisterLoanApplicationUseCaseTest {
                 userRepository
         );
     }
+
 
     @Test
     void createLoanApplication_setsUserEmail() {
@@ -353,4 +357,52 @@ class RegisterLoanApplicationUseCaseTest {
                 })
                 .verify();
     }
+    @Test
+    void getLoanApp_successful() {
+        LoanApplicationListItem item = LoanApplicationListItem.builder()
+                .amount(5000.0)
+                .term(12)
+                .email("test@mail.com")
+                .userName("Test User")
+                .loanTypeName("Personal Loan")
+                .interestRate(10.5)
+                .statusName("Pendiente")
+                .baseSalary("3000")
+                .monthlyRequestedAmount("450")
+                .build();
+
+        PageResponse<LoanApplicationListItem> pageResponse =
+                new PageResponse<>(0, 10, 1, 1, List.of(item));
+
+        when(loanApplicationRepository.findPending(0, 10, "test"))
+                .thenReturn(Mono.just(pageResponse));
+
+        StepVerifier.create(useCase.getLoanApp(0, 10, "test"))
+                .expectNextMatches(resp ->
+                        resp.getItems().size() == 1 &&
+                                "test@mail.com".equals(resp.getItems().get(0).getEmail()))
+                .verifyComplete();
+    }
+
+    @Test
+    void getLoanApp_invalidPageParameters() {
+        StepVerifier.create(useCase.getLoanApp(-1, 10, "test"))
+                .expectError(InvalidPaginationParametersException.class)
+                .verify();
+
+        StepVerifier.create(useCase.getLoanApp(0, 0, "test"))
+                .expectError(InvalidPaginationParametersException.class)
+                .verify();
+    }
+
+    @Test
+    void getLoanApp_noResultsFound() {
+        when(loanApplicationRepository.findPending(0, 10, "nothing"))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.getLoanApp(0, 10, "nothing"))
+                .expectError(NoLoanApplicationsFoundException.class)
+                .verify();
+    }
+
 }

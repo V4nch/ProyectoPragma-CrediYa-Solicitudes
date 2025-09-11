@@ -9,8 +9,10 @@ public class LoanApplicationListItemEntity {
     private Double amount;
     private Integer term;
     private String email;
-    private String loanTypeName;
-    private Double interestRate;
-    private String statusName;
-    private String baseSalary;
+    private String username;
+    private String loantypename;
+    private Double interestrate;
+    private String statusname;
+    private String basesalary;
+    private String monthlyrequestedamount;
 }

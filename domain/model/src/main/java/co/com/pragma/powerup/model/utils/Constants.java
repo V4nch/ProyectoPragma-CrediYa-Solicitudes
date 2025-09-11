@@ -10,15 +10,11 @@ public class Constants {
     public static final String STATUS_NOT_FOUND_MESSAGE = "Status not found";
     public static final String LOAN_TYPE_NOT_FOUND_MESSAGE= "Loan type not found";
     public static final String ERROR_INVALID_PAGINATION = "Invalid pagination parameters.";
-    public static final String ERROR_INVALID_FILTER = "Search filter cannot be null.";
     public static final String ERROR_NO_RESULTS = "No pending loan applications found.";
-    public static final String ERROR_REPOSITORY = "Error while querying the repository.";
     // ---------------------------
     // HTTP
     // ---------------------------
     public static final String PATH_LOAN_APPLICATION = "/api/v1/solicitud";
-    public static final String LOG_LA_CREATE_SUCCESSFUL = "Loan Application successfully created: {}";
-    public static final String LOG_LA_CREATE_ERROR = "Error creating Loan Application: {}";
     public static final String CONTENT_TYPE = "application/json";
     public static final String NAME_FUNCTION = "createLoanApplication";
     public static final String GET_NAME_FUNCTION = "getLoanApplication";
@@ -65,13 +61,11 @@ public class Constants {
     public static final String LOG_ERROR_GET_USER = "Error user not found";
     public static final String LOG_ERROR_GETTING_USER = "Error get user: {}";
     public static final String LOG_USER_ID_CARD_MISMATCH = "ID Card mismatch: provided  does not match expected: {}";
-    public static final String LOG_FETCHING = "Fetching pending loan applications. Page: {}, Size: {}, Filter: {}";
-    public static final String LOG_SUCCESS = "Successfully fetched {} items";
-    public static final String LOG_ERROR = "Error fetching pending loan applications: {}";
-    public static final String LOG_GENERAL_ERROR = "ERROR: {}";
     public static final String LOG_NO_LOAN_APP_ERROR = "No loan app found: {}";
     public static final String LOG_INVALID_PAGINATION_ERROR = "Invalid pagination: {}";
-    public static final String LOG_INVALID_FILTER_ERROR = "Invalid filter: {}";
+    public static final String LOG_GET_LOAN_APP_REQUEST = "GetLoanApplication request received - page: {}, size: {}, filter: {}";
+    public static final String LOG_GET_LOAN_APP_SUCCESS = "GetLoanApplication successful - totalItems: {}";
+    public static final String LOG_GET_LOAN_APP_ERROR   = "Error in GetLoanApplication: {}";
     // ---------------------------
     // ROUTER OPERATION
     // ---------------------------

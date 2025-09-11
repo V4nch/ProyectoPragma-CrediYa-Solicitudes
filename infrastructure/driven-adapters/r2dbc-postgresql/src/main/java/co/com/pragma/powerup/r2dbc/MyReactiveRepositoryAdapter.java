@@ -42,10 +42,12 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
                 .amount(entity.getAmount())
                 .term(entity.getTerm())
                 .email(entity.getEmail())
-                .loanTypeName(entity.getLoanTypeName())
-                .interestRate(entity.getInterestRate())
-                .statusName(entity.getStatusName())
-                .baseSalary(entity.getBaseSalary())
+                .userName(entity.getUsername())
+                .loanTypeName(entity.getLoantypename())
+                .interestRate(entity.getInterestrate())
+                .statusName(entity.getStatusname())
+                .baseSalary(entity.getBasesalary())
+                .monthlyRequestedAmount(entity.getMonthlyrequestedamount())
                 .build();
     }
 
