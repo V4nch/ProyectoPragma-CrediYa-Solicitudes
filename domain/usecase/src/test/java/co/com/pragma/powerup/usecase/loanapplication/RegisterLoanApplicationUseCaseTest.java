@@ -1,4 +1,4 @@
-package co.com.pragma.powerup.usecase.registerloanapplication;
+package co.com.pragma.powerup.usecase.loanapplication;
 
 import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
@@ -27,7 +27,7 @@ class RegisterLoanApplicationUseCaseTest {
     private LoanApplicationRepository loanApplicationRepository;
     private LoanTypeRepository loanTypeRepository;
     private StatusRepository statusRepository;
-    private RegisterLoanApplicationUseCase useCase;
+    private LoanApplicationUseCase useCase;
     private UserRepository userRepository;
 
     @BeforeEach
@@ -37,7 +37,7 @@ class RegisterLoanApplicationUseCaseTest {
         statusRepository = mock(StatusRepository.class);
         userRepository = mock(UserRepository.class);
 
-        useCase = new RegisterLoanApplicationUseCase(
+        useCase = new LoanApplicationUseCase(
                 loanApplicationRepository,
                 loanTypeRepository,
                 statusRepository,

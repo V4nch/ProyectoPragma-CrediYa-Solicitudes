@@ -1,8 +1,10 @@
-package co.com.pragma.powerup.usecase.registerloanapplication;
+package co.com.pragma.powerup.usecase.loanapplication;
 
 import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
+import co.com.pragma.powerup.model.loanapplication.response.LoanApplicationListItem;
+import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
 import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
 import co.com.pragma.powerup.model.loantype.LoanType;
 import co.com.pragma.powerup.model.loantype.gateways.LoanTypeRepository;
@@ -14,7 +16,7 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 @Log4j2
 @RequiredArgsConstructor
-public class RegisterLoanApplicationUseCase {
+public class LoanApplicationUseCase {
     private final LoanApplicationRepository loanApplicationRepository;
     private final LoanTypeRepository loanTypeRepository;
     private final StatusRepository statusRepository;
@@ -30,6 +32,35 @@ public class RegisterLoanApplicationUseCase {
                         log.info(Constants.LOG_LA_CREATE_SUCCESSFUL,savedLoan.getLoanApplication().getIdLoanType() ))
                 .doOnError(error ->
                         log.error(Constants.LOG_LA_CREATE_ERROR, error.getMessage()));
+    }
+
+    public Mono<PageResponse<LoanApplicationListItem>> execute(int page, int size, String filter) {
+        log.info(Constants.LOG_FETCHING, page, size, filter);
+
+        validateParameters(page, size, filter);
+
+        return loanApplicationRepository.findPending(page, size, filter)
+                .switchIfEmpty(Mono.error(new NoLoanApplicationsFoundException(
+                        Constants.ERROR_NO_RESULTS)))
+                .doOnSuccess(response -> log.info(
+                        Constants.LOG_SUCCESS,
+                        response.getItems().size()))
+                .doOnError(this::handleRepositoryError);
+    }
+
+    private void validateParameters(int page, int size, String filter) {
+        if (page < 0 || size <= 0)
+            throw new InvalidPaginationParametersException(
+                    Constants.ERROR_INVALID_PAGINATION);
+        if (filter == null)
+            throw new InvalidFilterException(
+                    Constants.ERROR_INVALID_FILTER);
+    }
+
+    private void handleRepositoryError(Throwable error) {
+        log.error(Constants.LOG_ERROR, error.getMessage());
+        throw new LoanApplicationRepositoryException(
+                Constants.ERROR_REPOSITORY, error);
     }
 
     private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication, String idCard, String token,String idCardFromToken){
