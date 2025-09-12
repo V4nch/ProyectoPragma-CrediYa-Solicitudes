@@ -5,9 +5,8 @@ import co.com.pragma.powerup.consumer.mapper.UserMapper;
 import co.com.pragma.powerup.model.user.User;
 import co.com.pragma.powerup.model.user.gateways.UserRepository;
 import co.com.pragma.powerup.model.utils.Constants;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -21,24 +20,24 @@ public class RestConsumer implements UserRepository {
     private final WebClient client;
 
     @Override
-    public Mono<User> getUserByIdCard(String idCard,String token) {
-        System.out.println(" Este es el TOKEN "+token);
-        return client.get()
-                .uri(Constants.PATH_USER, idCard)
-                .headers(headers -> {
-                    // Agregar el token aquí
-                    headers.setBearerAuth(token); // getToken() devuelve tu JWT
-                })
-                .retrieve()
-                .bodyToMono(UserResponse.class)
-                .timeout(Duration.ofSeconds(5))
-                .map(UserMapper::toDomain)
-                .onErrorMap(throwable -> {
+    public Mono<User> getUserByIdCard(String idCard) {
+        return Mono.deferContextual(ctx -> {
+            String token = ctx.get("authToken");
+            return client.get()
+                    .uri(Constants.PATH_USER, idCard)
+                    .header(HttpHeaders.AUTHORIZATION, token)
+                    .retrieve()
+                    .bodyToMono(UserResponse.class)
+                    .timeout(Duration.ofSeconds(5))
+                    .map(UserMapper::toDomain)
+                    .onErrorMap(throwable -> {
 
-                    if (throwable instanceof WebClientResponseException) {
-                        return new RuntimeException(Constants.LOG_ERROR_USER + throwable.getMessage(), throwable);
-                    }
-                    return new RuntimeException(Constants.LOG_ERROR_GET_USER, throwable);
-                });
+                        if (throwable instanceof WebClientResponseException) {
+                            return new RuntimeException(Constants.LOG_ERROR_USER + throwable.getMessage(), throwable);
+                        }
+                        return new RuntimeException(Constants.LOG_ERROR_GET_USER, throwable);
+                    });
+        });
+
     }
 }

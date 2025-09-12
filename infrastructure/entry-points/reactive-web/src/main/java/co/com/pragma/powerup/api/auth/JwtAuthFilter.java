@@ -30,7 +30,6 @@ public class JwtAuthFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
 
-        // 🔹 Excluir rutas públicas de Swagger/OpenAPI
         if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.startsWith("/webjars")) {
             return chain.filter(exchange);
         }
@@ -47,22 +46,22 @@ public class JwtAuthFilter implements WebFilter {
                         .parseClaimsJws(token)
                         .getBody();
 
-                // Extraer roles del token y crear authorities
+
                 List<String> roles = claims.get("roles", List.class);
                 List<SimpleGrantedAuthority> authorities = roles.stream()
-                        .map(r -> new SimpleGrantedAuthority("ROLE_" + r)) // Spring espera prefijo ROLE_
+                        .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
                         .collect(Collectors.toList());
 
-                // Crear Authentication y cargar en SecurityContext
+
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
 
-                // Guardar info extra en attributes si quieres
+
                 exchange.getAttributes().put("roles", roles);
                 exchange.getAttributes().put("idCard", claims.get("idCard", String.class));
-                exchange.getAttributes().put("token", token); // opcional, para consumir microservicio A
+                exchange.getAttributes().put("token", token);
 
-                // Continuar la cadena con SecurityContext
+
                 return chain.filter(exchange)
                         .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(new SecurityContextImpl(auth))));
 

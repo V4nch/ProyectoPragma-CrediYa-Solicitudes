@@ -1,8 +1,10 @@
-package co.com.pragma.powerup.usecase.registerloanapplication;
+package co.com.pragma.powerup.usecase.loanapplication;
 
 import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
+import co.com.pragma.powerup.model.loanapplication.response.LoanApplicationListItem;
+import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
 import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
 import co.com.pragma.powerup.model.loantype.LoanType;
 import co.com.pragma.powerup.model.loantype.gateways.LoanTypeRepository;
@@ -10,30 +12,40 @@ import co.com.pragma.powerup.model.status.gateways.StatusRepository;
 import co.com.pragma.powerup.model.user.gateways.UserRepository;
 import co.com.pragma.powerup.model.utils.Constants;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+
+
 import reactor.core.publisher.Mono;
-@Log4j2
+
 @RequiredArgsConstructor
-public class RegisterLoanApplicationUseCase {
+public class LoanApplicationUseCase {
     private final LoanApplicationRepository loanApplicationRepository;
     private final LoanTypeRepository loanTypeRepository;
     private final StatusRepository statusRepository;
     private final UserRepository userRepository;
 
-    public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication,String idCard, String token, String idCardFromToken){
-        return getUserByIdCard(loanApplication, idCard, token, idCardFromToken)
+    public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication,String idCard, String idCardFromToken){
+        return getUserByIdCard(loanApplication, idCard,idCardFromToken)
                 .flatMap(loanApp -> validateLoanType(loanApp.getIdLoanType()))
                 .flatMap(loanType -> validateAmount(loanApplication, loanType))
                 .flatMap(this::assignPendingStatus)
-                .flatMap(this::saveApplication)
-                .doOnSuccess(savedLoan ->
-                        log.info(Constants.LOG_LA_CREATE_SUCCESSFUL,savedLoan.getLoanApplication().getIdLoanType() ))
-                .doOnError(error ->
-                        log.error(Constants.LOG_LA_CREATE_ERROR, error.getMessage()));
+                .flatMap(this::saveApplication);
     }
 
-    private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication, String idCard, String token,String idCardFromToken){
-        return userRepository.getUserByIdCard(idCard, token)
+    public Mono<PageResponse<LoanApplicationListItem>> getLoanApp(int page, int size, String filter) {
+
+        if (page < 0 || size <= 0) {
+            return Mono.error(new InvalidPaginationParametersException(
+                    Constants.ERROR_INVALID_PAGINATION));
+        }
+
+        return loanApplicationRepository.findPending(page, size, filter)
+                .switchIfEmpty(Mono.error(new NoLoanApplicationsFoundException(
+                        Constants.ERROR_NO_RESULTS)));
+    }
+
+    private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication,
+                                                  String idCard,String idCardFromToken){
+        return userRepository.getUserByIdCard(idCard)
                 .switchIfEmpty(Mono.error(new UserNotFoundException(Constants.LOG_ERROR_GET_USER)))
                 .flatMap(user -> {
                     if (!user.getIdCard().equals(idCardFromToken)) {
