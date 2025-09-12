@@ -68,13 +68,13 @@ class RegisterLoanApplicationUseCaseTest {
         user.setIdCard("789"); // necesario por la comparación en getUserByIdCard
         user.setEmailAddress("test@mail.com");
 
-        when(userRepository.getUserByIdCard("789","I")).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard("789")).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(80L)).thenReturn(Mono.just(loanType));
         when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.just(status));
         when(loanApplicationRepository.save(any(LoanApplication.class)))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication,"789","I","789"))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"789","789"))
                 .expectNextMatches(response ->
                         "test@mail.com".equals(response.getLoanApplication().getEmail()))
                 .verifyComplete();
@@ -95,11 +95,11 @@ class RegisterLoanApplicationUseCaseTest {
         user.setIdCard("111"); // debe coincidir con idCardFromToken
         user.setEmailAddress("test@mail.com");
 
-        when(userRepository.getUserByIdCard("111","I")).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard("111")).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(90L)).thenReturn(Mono.just(loanType));
         when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication,"111","I","111"))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"111","111"))
                 .expectErrorSatisfies(error ->
                         assertEquals(Constants.STATUS_NOT_FOUND_MESSAGE, error.getMessage()))
                 .verify();
@@ -114,10 +114,10 @@ class RegisterLoanApplicationUseCaseTest {
         user.setIdCard("222");
         user.setEmailAddress("test@mail.com");
 
-        when(userRepository.getUserByIdCard("222","I")).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard("222")).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(20L)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication,"222","I","222"))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"222","222"))
                 .expectError(LoanTypeNotFoundException.class)
                 .verify();
     }
@@ -150,14 +150,14 @@ class RegisterLoanApplicationUseCaseTest {
         user.setIdCard("333");
         user.setEmailAddress("test@mail.com");
 
-        when(userRepository.getUserByIdCard("333","I")).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard("333")).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(30L)).thenReturn(Mono.just(loanType));
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication,"333","I","333"))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"333","333"))
                 .expectError(AmountOutOfRangeException.class)
                 .verify();
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication,"333","I","333"))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"333","333"))
                 .expectErrorSatisfies(error ->
                         assertEquals(Constants.LOAN_AMOUNT_OUT_RANGE_MESSAGE, error.getMessage()))
                 .verify();
@@ -178,11 +178,11 @@ class RegisterLoanApplicationUseCaseTest {
         user.setIdCard("444");
         user.setEmailAddress("test@mail.com");
 
-        when(userRepository.getUserByIdCard("444","I")).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard("444")).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(40L)).thenReturn(Mono.just(loanType));
         when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication,"444","I","444"))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"444","444"))
                 .expectError(StatusNotFoundException.class)
                 .verify();
     }
@@ -201,10 +201,10 @@ class RegisterLoanApplicationUseCaseTest {
         user.setIdCard("555");
         user.setEmailAddress("test@mail.com");
 
-        when(userRepository.getUserByIdCard("555","I")).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard("555")).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(50L)).thenReturn(Mono.just(loanType));
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication,"555","I","555"))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"555","555"))
                 .expectError(AmountOutOfRangeException.class)
                 .verify();
     }
@@ -215,10 +215,10 @@ class RegisterLoanApplicationUseCaseTest {
         loanApplication.setIdLoanType(60L);
         loanApplication.setAmount(3000.0);
 
-        when(userRepository.getUserByIdCard("123","I"))
+        when(userRepository.getUserByIdCard("123"))
                 .thenReturn(Mono.error(new UserNotFoundException(Constants.LOG_ERROR_GET_USER)));
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication,"123","I","123"))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"123","123"))
                 .expectError(UserNotFoundException.class)
                 .verify();
     }
@@ -228,10 +228,10 @@ class RegisterLoanApplicationUseCaseTest {
         loanApplication.setIdLoanType(70L);
         loanApplication.setAmount(3000.0);
 
-        when(userRepository.getUserByIdCard("456", "I"))
+        when(userRepository.getUserByIdCard("456"))
                 .thenReturn(Mono.error(new RuntimeException("DB connection error")));
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication,"456","I","456"))
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"456","456"))
                 .expectErrorSatisfies(error -> {
                     assertTrue(error instanceof RuntimeException);
                     assertEquals("DB connection error", error.getMessage());
@@ -347,10 +347,10 @@ class RegisterLoanApplicationUseCaseTest {
         user.setIdCard("999"); // idCard del usuario
         user.setEmailAddress("test@mail.com");
 
-        when(userRepository.getUserByIdCard("999","I")).thenReturn(Mono.just(user));
+        when(userRepository.getUserByIdCard("999")).thenReturn(Mono.just(user));
         when(loanTypeRepository.findById(60L)).thenReturn(Mono.just(loanType));
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication,"999","I","123")) // idCardFromToken distinto
+        StepVerifier.create(useCase.createLoanApplication(loanApplication,"999","123")) // idCardFromToken distinto
                 .expectErrorSatisfies(error -> {
                     assertTrue(error instanceof UserIdCardMismatchException);
                     assertEquals("ID Card mismatch: provided '999' does not match expected '123'.", error.getMessage());

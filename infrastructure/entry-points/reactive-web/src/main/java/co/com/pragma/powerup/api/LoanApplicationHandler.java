@@ -123,11 +123,12 @@ public class LoanApplicationHandler {
             .doOnNext(laReq -> log.debug(Constants.LOG_RECEIVED_DATA, laReq))
             .flatMap(laReq -> loanApplicationUseCase.createLoanApplication(
                 new LoanApplication(laReq.getAmount(),laReq.getTerm(),laReq.getIdLoanType()),
-                        laReq.getIdCard(), authHeader.replace("Bearer ", ""),idCardFromToken
+                        laReq.getIdCard(), idCardFromToken
             ))
             .doOnSuccess(la -> log.info(Constants.LOG_LOAN_APP_CREATED, la.getStatusLoanApplication()))
             .doOnError(error -> log.error(Constants.LOG_LOAN_APP_CREATION_ERROR, error.getMessage()))
-            .flatMap(la -> ServerResponse.ok().bodyValue(la));
+            .flatMap(la -> ServerResponse.ok().bodyValue(la))
+                .contextWrite(ctx -> ctx.put("authToken", authHeader != null ? authHeader: ""));
     }
 
     @Operation(

@@ -23,8 +23,8 @@ public class LoanApplicationUseCase {
     private final StatusRepository statusRepository;
     private final UserRepository userRepository;
 
-    public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication,String idCard, String token, String idCardFromToken){
-        return getUserByIdCard(loanApplication, idCard, token, idCardFromToken)
+    public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication,String idCard, String idCardFromToken){
+        return getUserByIdCard(loanApplication, idCard,idCardFromToken)
                 .flatMap(loanApp -> validateLoanType(loanApp.getIdLoanType()))
                 .flatMap(loanType -> validateAmount(loanApplication, loanType))
                 .flatMap(this::assignPendingStatus)
@@ -43,8 +43,9 @@ public class LoanApplicationUseCase {
                         Constants.ERROR_NO_RESULTS)));
     }
 
-    private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication, String idCard, String token,String idCardFromToken){
-        return userRepository.getUserByIdCard(idCard, token)
+    private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication,
+                                                  String idCard,String idCardFromToken){
+        return userRepository.getUserByIdCard(idCard)
                 .switchIfEmpty(Mono.error(new UserNotFoundException(Constants.LOG_ERROR_GET_USER)))
                 .flatMap(user -> {
                     if (!user.getIdCard().equals(idCardFromToken)) {
