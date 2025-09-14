@@ -39,7 +39,7 @@ cors:
 adapter:
   restconsumer:
     timeout: 5000
-    url: "http://localhost:8083/api/v1"
+    url: ${MS_USUARIOS_URL:http://localhost:8083/api/v1}
 resilience4j:
   circuitbreaker:
     instances:
