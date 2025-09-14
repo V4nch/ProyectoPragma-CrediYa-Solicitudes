@@ -28,6 +28,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .pathMatchers(HttpMethod.POST, Constants.PATH_LOAN_APPLICATION).hasRole(Constants.ROLE_CLIENT)
                         .pathMatchers(HttpMethod.GET, Constants.PATH_LOAN_APPLICATION).hasAnyRole(Constants.ROLE_ADVISOR)
+                        .pathMatchers(HttpMethod.PUT, Constants.PATH_LOAN_APPLICATION).hasAnyRole(Constants.ROLE_ADVISOR)
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtAuthFilter, SecurityWebFiltersOrder.AUTHENTICATION)

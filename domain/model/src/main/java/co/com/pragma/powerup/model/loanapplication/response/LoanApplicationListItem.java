@@ -10,6 +10,7 @@ import lombok.*;
 @Builder(toBuilder = true)
 @ToString
 public class LoanApplicationListItem {
+    private Long loanId;
     private Double amount;
     private Integer term;
     private String email;

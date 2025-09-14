@@ -9,8 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
@@ -31,11 +30,20 @@ public class RouterRest {
                     produces = { Constants.CONTENT_TYPE },
                     beanClass = LoanApplicationHandler.class,
                     beanMethod = Constants.GET_NAME_FUNCTION
+            ),
+            @RouterOperation(
+                    path = Constants.PATH_LOAN_APPLICATION,
+                    method = {RequestMethod.PUT},
+                    produces = { Constants.CONTENT_TYPE },
+                    consumes = { Constants.CONTENT_TYPE },
+                    beanClass = LoanApplicationHandler.class,
+                    beanMethod = Constants.PUT_NAME_FUNCTION
             )
     })
     public RouterFunction<ServerResponse> routerFunction(LoanApplicationHandler handler) {
         return route(POST(Constants.PATH_LOAN_APPLICATION), handler::createLoanApplication)
-                .andRoute(GET(Constants.PATH_LOAN_APPLICATION), handler::getLoanApplication);
+                .andRoute(GET(Constants.PATH_LOAN_APPLICATION), handler::getLoanApplication)
+                .andRoute(PUT(Constants.PATH_LOAN_APPLICATION), handler::putLoanApplication);
 
     }
 }

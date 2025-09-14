@@ -8,4 +8,6 @@ import reactor.core.publisher.Mono;
 public interface LoanApplicationRepository {
     Mono<LoanApplication> save(LoanApplication loanApplication);
     Mono<PageResponse<LoanApplicationListItem>> findPending(int page, int size, String filter);
+    Mono<LoanApplication> findById(Long id);
+    Mono<LoanApplication> updateStatus(Long loanId, Long idStatus);
 }

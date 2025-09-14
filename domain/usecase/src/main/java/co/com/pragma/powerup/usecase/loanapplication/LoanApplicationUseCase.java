@@ -3,6 +3,7 @@ package co.com.pragma.powerup.usecase.loanapplication;
 import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
+import co.com.pragma.powerup.model.loanapplication.request.UpdateLoanStatusRequest;
 import co.com.pragma.powerup.model.loanapplication.response.LoanApplicationListItem;
 import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
 import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
@@ -41,6 +42,16 @@ public class LoanApplicationUseCase {
         return loanApplicationRepository.findPending(page, size, filter)
                 .switchIfEmpty(Mono.error(new NoLoanApplicationsFoundException(
                         Constants.ERROR_NO_RESULTS)));
+    }
+
+    public Mono<LoanApplication> putLoanApp(UpdateLoanStatusRequest request) {
+        return loanApplicationRepository.findById(request.getLoanId())
+            .switchIfEmpty(Mono.error(new IllegalArgumentException("Solicitud no encontrada")))
+            .flatMap(loan -> statusRepository.findByName(request.getNewStatus())
+            .switchIfEmpty(Mono.error(new IllegalArgumentException("Estado inválido")))
+            .flatMap(statusId ->
+                    loanApplicationRepository.updateStatus(loan.getIdLoanType(), statusId.getIdStatus()))
+                );
     }
 
     private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication,
