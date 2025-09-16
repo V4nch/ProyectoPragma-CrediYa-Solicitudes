@@ -231,15 +231,15 @@ public class LoanApplicationHandler {
     }
 
     @Operation(
-        summary =Constants.SUMMARY_REGISTER_LOAN_APP,
-        description =Constants.DESCRIPTION_REGISTER_LOAN_APP,
+        summary =Constants.SUMMARY_UPDATE_LOAN_APP,
+        description =Constants.DESCRIPTION_UPDATE_LOAN_APP,
         requestBody = @RequestBody(
             required = true,
             content = @Content(
                 schema = @Schema(implementation = UpdateLoanStatusRequest.class),
                 examples = {
                     @ExampleObject(
-                        name =Constants.EXAMPLE_LOAN_APP_REGISTERED_NAME,
+                        name =Constants.EXAMPLE_LOAN_APP_PUT_NAME,
                         value =Constants.EXAMPLE_LOAN_APP_PUT_VALUE
                     )
                 }
@@ -248,26 +248,13 @@ public class LoanApplicationHandler {
         responses = {
             @ApiResponse(
                 responseCode = Constants.CODE_200,
-                description = Constants.RESPONSE_LOAN_APP_REGISTERED,
+                description = Constants.DESCRIPTION_UPDATE_LOAN_APP,
                 content = @Content(
-                    schema = @Schema(implementation = LoanApplication.class),
+                    schema = @Schema(implementation = ResponseLoanApplication.class),
                     examples = {
                         @ExampleObject(
-                            name =Constants.EXAMPLE_LOAN_APP_REGISTERED_NAME,
-                            value =Constants.EXAMPLE_LOAN_APP_REGISTERED_VALUE
-                        )
-                    }
-                )
-            ),
-            @ApiResponse(
-                responseCode = Constants.CODE_400,
-                description =Constants.RESPONSE_BAD_REQUEST,
-                content = @Content(
-                    schema = @Schema(implementation = ErrorResponse.class),
-                    examples = {
-                        @ExampleObject(
-                            name =Constants.EXAMPLE_AMOUNT_OUT_OF_RANGE_NAME,
-                            value =Constants.EXAMPLE_AMOUNT_OUT_OF_RANGE_VALUE
+                            name =Constants.EXAMPLE_LOAN_APP_PUT_RESPONSE_NAME,
+                            value =Constants.EXAMPLE_LOAN_APP_PUT_RESPONSE_VALUE
                         )
                     }
                 )
@@ -287,13 +274,13 @@ public class LoanApplicationHandler {
             ),
             @ApiResponse(
                 responseCode = Constants.CODE_404,
-                description =Constants.RESPONSE_NOT_FOUND,
+                description = Constants.RESPONSE_NOT_FOUND_GET,
                 content = @Content(
                     schema = @Schema(implementation = ErrorResponse.class),
                     examples = {
                         @ExampleObject(
-                            name =Constants.EXAMPLE_LOAN_TYPE_NOT_FOUND_NAME,
-                            value =Constants.EXAMPLE_LOAN_TYPE_NOT_FOUND_VALUE
+                                name = Constants.EXAMPLE_NO_LOAN_APPS_FOUND_NAME,
+                                value = Constants.EXAMPLE_NO_LOAN_APPS_FOUND_VALUE
                         )
                     }
                 )
@@ -319,7 +306,7 @@ public class LoanApplicationHandler {
         return request.bodyToMono(UpdateLoanStatusRequest.class)
                 .flatMap(loanApplicationUseCase::putLoanApp)
                 .flatMap(updatedLoan -> {
-                    log.info(Constants.LOG_UPDATE_LOAN_SUCCESS, updatedLoan.getIdStatus());
+                    log.info(Constants.LOG_UPDATE_LOAN_SUCCESS, updatedLoan.getStatusLoanApplication());
                     return ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(updatedLoan);})

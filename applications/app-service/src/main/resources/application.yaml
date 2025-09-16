@@ -19,7 +19,7 @@ spring:
     include: null
 security:
   jwt:
-    secret: ${JWT_SECRET:my-super-secret-key-that-is-at-least-32-chars-long}
+    secret: "${JWT_SECRET:my-super-secret-key-that-is-at-least-32-chars-long}"
     expiration: 3600
     json-exp-roles: "/roles"
 management:
@@ -39,7 +39,10 @@ cors:
 adapter:
   restconsumer:
     timeout: 5000
-    url: ${MS_USUARIOS_URL:http://localhost:8083/api/v1}
+    url: "${MS_USUARIOS_URL:http://localhost:8083/api/v1}"
+  sqs:
+    region: "us-east-2"
+    queueUrl: "https://sqs.us-east-2.amazonaws.com/498606688180/solicitudes-status-queue"
 resilience4j:
   circuitbreaker:
     instances:

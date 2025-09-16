@@ -11,6 +11,7 @@ public class Constants {
     public static final String LOAN_TYPE_NOT_FOUND_MESSAGE= "Loan type not found";
     public static final String ERROR_INVALID_PAGINATION = "Invalid pagination parameters.";
     public static final String ERROR_NO_RESULTS = "No pending loan applications found.";
+    public static final String ERROR_NOT_FOUND_LOAN = "No loan applications found.";
     // ---------------------------
     // HTTP
     // ---------------------------
@@ -73,7 +74,9 @@ public class Constants {
     // ROUTER OPERATION
     // ---------------------------
     public static final String SUMMARY_REGISTER_LOAN_APP = "Register loan application";
+    public static final String SUMMARY_UPDATE_LOAN_APP = "Update status loan application";
     public static final String DESCRIPTION_REGISTER_LOAN_APP = "Allows registering a new application";
+    public static final String DESCRIPTION_UPDATE_LOAN_APP = "Allows an update for a new status";
     public static final String SUMMARY_GET_LOAN_APP = "GET loan application";
     public static final String DESCRIPTION_GET_LOAN_APP = "Allows getting a loan application";
     // ---------------------------
@@ -112,10 +115,23 @@ public class Constants {
                 "idLoanType": 1
             }
             """;
+    public static final String EXAMPLE_LOAN_APP_PUT_NAME = "Update loan application";
     public static final String EXAMPLE_LOAN_APP_PUT_VALUE =  """
               {
               "loanId": 4,
               "newStatus": "Rechazado"
+            }
+            """;
+    public static final String EXAMPLE_LOAN_APP_PUT_RESPONSE_NAME = "Update status";
+    public static final String EXAMPLE_LOAN_APP_PUT_RESPONSE_VALUE = """
+            {
+                  "loanApplication": {
+                        "email" : "IvanM@gm.com",
+                        "amount" : 1500000,
+                        "term": 36,
+                        "idLoanType": 2
+                        },
+                  "statusLoanApplication": "Rechazado"
             }
             """;
     // ---------------------------
