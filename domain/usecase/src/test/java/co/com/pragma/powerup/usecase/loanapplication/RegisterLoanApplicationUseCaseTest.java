@@ -3,6 +3,8 @@ package co.com.pragma.powerup.usecase.loanapplication;
 import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
+import co.com.pragma.powerup.model.loanapplication.gateways.NotificationQueueRepository;
+import co.com.pragma.powerup.model.loanapplication.request.UpdateLoanStatusRequest;
 import co.com.pragma.powerup.model.loanapplication.response.LoanApplicationListItem;
 import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
 import co.com.pragma.powerup.model.loantype.LoanType;
@@ -32,6 +34,8 @@ class RegisterLoanApplicationUseCaseTest {
     private StatusRepository statusRepository;
     private LoanApplicationUseCase useCase;
     private UserRepository userRepository;
+    private NotificationQueueRepository sqsRepository;
+
 
     @BeforeEach
     void setUp() {
@@ -39,12 +43,14 @@ class RegisterLoanApplicationUseCaseTest {
         loanTypeRepository = mock(LoanTypeRepository.class);
         statusRepository = mock(StatusRepository.class);
         userRepository = mock(UserRepository.class);
+        sqsRepository = mock(NotificationQueueRepository.class);
 
         useCase = new LoanApplicationUseCase(
                 loanApplicationRepository,
                 loanTypeRepository,
                 statusRepository,
-                userRepository
+                userRepository,
+                sqsRepository
         );
     }
 
@@ -402,6 +408,100 @@ class RegisterLoanApplicationUseCaseTest {
 
         StepVerifier.create(useCase.getLoanApp(0, 10, "nothing"))
                 .expectError(NoLoanApplicationsFoundException.class)
+                .verify();
+    }
+    @Test
+    void putLoanApp_successful() {
+        UpdateLoanStatusRequest request = new UpdateLoanStatusRequest(1L, "Aprobado");
+
+        LoanApplication loan = LoanApplication.builder()
+                .email("loan@mail.com")
+                .idLoanType(1L)
+                .idStatus(1L)
+                .build();
+
+        Status status = new Status();
+        status.setIdStatus(2L);
+        status.setName("Aprobado");
+
+        when(loanApplicationRepository.findById(1L)).thenReturn(Mono.just(loan));
+        when(statusRepository.findByName("Aprobado")).thenReturn(Mono.just(status));
+        when(loanApplicationRepository.updateStatus(1L, 2L)).thenReturn(Mono.just(loan));
+        when(sqsRepository.send(anyString())).thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.putLoanApp(request))
+                .expectNextMatches(resp ->
+                        resp.getLoanApplication().getEmail().equals("loan@mail.com")
+                                && "Aprobado".equals(resp.getStatusLoanApplication())
+                )
+                .verifyComplete();
+    }
+
+    @Test
+    void putLoanApp_loanNotFound() {
+        UpdateLoanStatusRequest request = new UpdateLoanStatusRequest(99L, "Rechazado");
+
+        when(loanApplicationRepository.findById(99L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.putLoanApp(request))
+                .expectError(NoLoanApplicationsFoundException.class)
+                .verify();
+    }
+
+    @Test
+    void putLoanApp_statusNotFound() {
+        UpdateLoanStatusRequest request = new UpdateLoanStatusRequest(1L, "Rechazado");
+
+        LoanApplication loan = LoanApplication.builder().email("loan@mail.com").build();
+
+        when(loanApplicationRepository.findById(1L)).thenReturn(Mono.just(loan));
+        when(statusRepository.findByName("Rechazado")).thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.putLoanApp(request))
+                .expectError(StatusNotFoundException.class)
+                .verify();
+    }
+
+    @Test
+    void putLoanApp_updateStatusFails() {
+        UpdateLoanStatusRequest request = new UpdateLoanStatusRequest(1L, "Rechazado");
+
+        LoanApplication loan = LoanApplication.builder().email("loan@mail.com").build();
+
+        Status status = new Status();
+        status.setIdStatus(2L);
+        status.setName("Rechazado");
+
+        when(loanApplicationRepository.findById(1L)).thenReturn(Mono.just(loan));
+        when(statusRepository.findByName("Rechazado")).thenReturn(Mono.just(status));
+        when(loanApplicationRepository.updateStatus(1L, 2L))
+                .thenReturn(Mono.error(new RuntimeException("DB update failed")));
+
+        StepVerifier.create(useCase.putLoanApp(request))
+                .expectErrorMatches(err -> err instanceof RuntimeException &&
+                        err.getMessage().equals("DB update failed"))
+                .verify();
+    }
+
+    @Test
+    void putLoanApp_notificationFails() {
+        UpdateLoanStatusRequest request = new UpdateLoanStatusRequest(1L, "Aprobado");
+
+        LoanApplication loan = LoanApplication.builder().email("loan@mail.com").build();
+
+        Status status = new Status();
+        status.setIdStatus(2L);
+        status.setName("Aprobado");
+
+        when(loanApplicationRepository.findById(1L)).thenReturn(Mono.just(loan));
+        when(statusRepository.findByName("Aprobado")).thenReturn(Mono.just(status));
+        when(loanApplicationRepository.updateStatus(1L, 2L)).thenReturn(Mono.just(loan));
+        when(sqsRepository.send(anyString()))
+                .thenReturn(Mono.error(new RuntimeException("SQS unavailable")));
+
+        StepVerifier.create(useCase.putLoanApp(request))
+                .expectErrorMatches(err -> err instanceof RuntimeException &&
+                        err.getMessage().equals("SQS unavailable"))
                 .verify();
     }
 

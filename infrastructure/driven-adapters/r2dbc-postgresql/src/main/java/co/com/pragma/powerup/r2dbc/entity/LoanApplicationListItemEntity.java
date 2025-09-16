@@ -6,6 +6,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoanApplicationListItemEntity {
+    private Long loanid;
     private Double amount;
     private Integer term;
     private String email;

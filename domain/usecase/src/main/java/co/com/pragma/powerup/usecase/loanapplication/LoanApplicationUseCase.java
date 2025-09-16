@@ -3,6 +3,8 @@ package co.com.pragma.powerup.usecase.loanapplication;
 import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
+import co.com.pragma.powerup.model.loanapplication.gateways.NotificationQueueRepository;
+import co.com.pragma.powerup.model.loanapplication.request.UpdateLoanStatusRequest;
 import co.com.pragma.powerup.model.loanapplication.response.LoanApplicationListItem;
 import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
 import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
@@ -22,6 +24,7 @@ public class LoanApplicationUseCase {
     private final LoanTypeRepository loanTypeRepository;
     private final StatusRepository statusRepository;
     private final UserRepository userRepository;
+    private final NotificationQueueRepository notificationQueueRepository;
 
     public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication,String idCard, String idCardFromToken){
         return getUserByIdCard(loanApplication, idCard,idCardFromToken)
@@ -41,6 +44,25 @@ public class LoanApplicationUseCase {
         return loanApplicationRepository.findPending(page, size, filter)
                 .switchIfEmpty(Mono.error(new NoLoanApplicationsFoundException(
                         Constants.ERROR_NO_RESULTS)));
+    }
+
+    public Mono<ResponseLoanApplication> putLoanApp(UpdateLoanStatusRequest request) {
+        return loanApplicationRepository.findById(request.getLoanId())
+            .switchIfEmpty(Mono.error(new NoLoanApplicationsFoundException(Constants.ERROR_NOT_FOUND_LOAN)))
+            .flatMap(loan -> statusRepository.findByName(request.getNewStatus()))
+            .switchIfEmpty(Mono.error(new StatusNotFoundException(Constants.STATUS_NOT_FOUND)))
+            .flatMap(statusId ->
+                    loanApplicationRepository.updateStatus(request.getLoanId(), statusId.getIdStatus()))
+            .flatMap(updatedLoan ->
+                    notificationQueueRepository.send(
+                        String.format("{\"loanId\": %d, \"email\": \"%s\", \"status\": \"%s\"}",
+                            request.getLoanId(), updatedLoan.getEmail(), request.getNewStatus()
+                        )
+                    )
+                    .thenReturn(
+                        new ResponseLoanApplication(updatedLoan, request.getNewStatus())
+                    )
+            );
     }
 
     private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication,

@@ -39,6 +39,7 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
 
     private LoanApplicationListItem mapToDomain(LoanApplicationListItemEntity entity) {
         return LoanApplicationListItem.builder()
+                .loanId(entity.getLoanid())
                 .amount(entity.getAmount())
                 .term(entity.getTerm())
                 .email(entity.getEmail())
@@ -50,5 +51,12 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
                 .monthlyRequestedAmount(entity.getMonthlyrequestedamount())
                 .build();
     }
+
+    @Override
+    public Mono<LoanApplication> updateStatus(Long loanId, Long idStatus) {
+        return repository.updateStatus(loanId, idStatus)
+                .map(la -> mapper.map(la, LoanApplication.class));
+    }
+
 
 }

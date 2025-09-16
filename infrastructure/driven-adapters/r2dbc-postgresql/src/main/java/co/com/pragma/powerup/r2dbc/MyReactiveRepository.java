@@ -15,6 +15,7 @@ public interface MyReactiveRepository extends ReactiveCrudRepository<LoanApplica
 {
     @Query("""
         SELECT
+            la.loan_id as loanId,
             la.amount,
             la.term,
             la.email,
@@ -52,4 +53,9 @@ public interface MyReactiveRepository extends ReactiveCrudRepository<LoanApplica
                OR LOWER(u.base_salary::text) LIKE LOWER(CONCAT('%', :filter, '%')))
     """)
     Mono<Long> countForAdvisorWithFilter(@Param("filter") String filter);
+
+    @Query("UPDATE loanapplications SET id_status = :idStatus WHERE loan_id = :loanId RETURNING *")
+    Mono<LoanApplicationEntity> updateStatus(@Param("loanId") Long loanId,
+                                             @Param("idStatus") Long idStatus);
 }
+

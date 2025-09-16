@@ -3,6 +3,7 @@ package co.com.pragma.powerup.api;
 import co.com.pragma.powerup.api.exception.ErrorResponse;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.request.LoanApplicationRequest;
+import co.com.pragma.powerup.model.loanapplication.request.UpdateLoanStatusRequest;
 import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
 import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
 import co.com.pragma.powerup.model.utils.Constants;
@@ -227,6 +228,90 @@ public class LoanApplicationHandler {
                             .bodyValue(response);
                 })
                 .doOnError(error -> log.error(Constants.LOG_GET_LOAN_APP_ERROR, error.getMessage(), error));
+    }
+
+    @Operation(
+        summary =Constants.SUMMARY_UPDATE_LOAN_APP,
+        description =Constants.DESCRIPTION_UPDATE_LOAN_APP,
+        requestBody = @RequestBody(
+            required = true,
+            content = @Content(
+                schema = @Schema(implementation = UpdateLoanStatusRequest.class),
+                examples = {
+                    @ExampleObject(
+                        name =Constants.EXAMPLE_LOAN_APP_PUT_NAME,
+                        value =Constants.EXAMPLE_LOAN_APP_PUT_VALUE
+                    )
+                }
+            )
+        ),
+        responses = {
+            @ApiResponse(
+                responseCode = Constants.CODE_200,
+                description = Constants.DESCRIPTION_UPDATE_LOAN_APP,
+                content = @Content(
+                    schema = @Schema(implementation = ResponseLoanApplication.class),
+                    examples = {
+                        @ExampleObject(
+                            name =Constants.EXAMPLE_LOAN_APP_PUT_RESPONSE_NAME,
+                            value =Constants.EXAMPLE_LOAN_APP_PUT_RESPONSE_VALUE
+                        )
+                    }
+                )
+            ),
+            @ApiResponse(
+                responseCode = Constants.CODE_404,
+                description =Constants.RESPONSE_NOT_FOUND,
+                content = @Content(
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = {
+                        @ExampleObject(
+                            name =Constants.EXAMPLE_STATUS_NOT_FOUND_NAME,
+                            value =Constants.EXAMPLE_STATUS_NOT_FOUND_VALUE
+                        )
+                    }
+                )
+            ),
+            @ApiResponse(
+                responseCode = Constants.CODE_404,
+                description = Constants.RESPONSE_NOT_FOUND_GET,
+                content = @Content(
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = {
+                        @ExampleObject(
+                                name = Constants.EXAMPLE_NO_LOAN_APPS_FOUND_NAME,
+                                value = Constants.EXAMPLE_NO_LOAN_APPS_FOUND_VALUE
+                        )
+                    }
+                )
+            ),
+            @ApiResponse(
+                responseCode = Constants.CODE_500,
+                description =Constants.RESPONSE_INTERNAL_ERROR,
+                content = @Content(
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = {
+                        @ExampleObject(
+                            name =Constants.EXAMPLE_SERVER_ERROR_NAME,
+                            value =Constants.EXAMPLE_SERVER_ERROR_VALUE
+                        )
+                    }
+                )
+            )
+        }
+    )
+    public Mono<ServerResponse> putLoanApplication(ServerRequest request){
+
+
+        return request.bodyToMono(UpdateLoanStatusRequest.class)
+                .flatMap(loanApplicationUseCase::putLoanApp)
+                .flatMap(updatedLoan -> {
+                    log.info(Constants.LOG_UPDATE_LOAN_SUCCESS, updatedLoan.getStatusLoanApplication());
+                    return ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(updatedLoan);})
+                .doOnError(error -> log.error(Constants.LOG_UPDATE_LOAN_ERROR, error.getMessage(), error));
+
     }
 
 }

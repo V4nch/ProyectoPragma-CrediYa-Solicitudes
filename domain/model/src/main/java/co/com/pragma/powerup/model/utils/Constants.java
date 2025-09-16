@@ -11,6 +11,7 @@ public class Constants {
     public static final String LOAN_TYPE_NOT_FOUND_MESSAGE= "Loan type not found";
     public static final String ERROR_INVALID_PAGINATION = "Invalid pagination parameters.";
     public static final String ERROR_NO_RESULTS = "No pending loan applications found.";
+    public static final String ERROR_NOT_FOUND_LOAN = "No loan applications found.";
     // ---------------------------
     // HTTP
     // ---------------------------
@@ -18,6 +19,7 @@ public class Constants {
     public static final String CONTENT_TYPE = "application/json";
     public static final String NAME_FUNCTION = "createLoanApplication";
     public static final String GET_NAME_FUNCTION = "getLoanApplication";
+    public static final String PUT_NAME_FUNCTION = "putLoanApplication";
     public static final String API_CREDIYA = "API CrediYa";
     public static final String VERSION_1 = "1.0";
     public static final String LOAN_APP_DESCRIPTION = "API for managing loan applications in CrediYa";
@@ -66,11 +68,15 @@ public class Constants {
     public static final String LOG_GET_LOAN_APP_REQUEST = "GetLoanApplication request received - page: {}, size: {}, filter: {}";
     public static final String LOG_GET_LOAN_APP_SUCCESS = "GetLoanApplication successful - totalItems: {}";
     public static final String LOG_GET_LOAN_APP_ERROR   = "Error in GetLoanApplication: {}";
+    public static final String LOG_UPDATE_LOAN_SUCCESS = "Status updated successfully to '{}'";
+    public static final String LOG_UPDATE_LOAN_ERROR = "Failed to update status {}";
     // ---------------------------
     // ROUTER OPERATION
     // ---------------------------
     public static final String SUMMARY_REGISTER_LOAN_APP = "Register loan application";
+    public static final String SUMMARY_UPDATE_LOAN_APP = "Update status loan application";
     public static final String DESCRIPTION_REGISTER_LOAN_APP = "Allows registering a new application";
+    public static final String DESCRIPTION_UPDATE_LOAN_APP = "Allows an update for a new status";
     public static final String SUMMARY_GET_LOAN_APP = "GET loan application";
     public static final String DESCRIPTION_GET_LOAN_APP = "Allows getting a loan application";
     // ---------------------------
@@ -107,6 +113,25 @@ public class Constants {
                 "amount" : 1500000,
                 "term": 36,
                 "idLoanType": 1
+            }
+            """;
+    public static final String EXAMPLE_LOAN_APP_PUT_NAME = "Update loan application";
+    public static final String EXAMPLE_LOAN_APP_PUT_VALUE =  """
+              {
+              "loanId": 4,
+              "newStatus": "Rechazado"
+            }
+            """;
+    public static final String EXAMPLE_LOAN_APP_PUT_RESPONSE_NAME = "Update status";
+    public static final String EXAMPLE_LOAN_APP_PUT_RESPONSE_VALUE = """
+            {
+                  "loanApplication": {
+                        "email" : "IvanM@gm.com",
+                        "amount" : 1500000,
+                        "term": 36,
+                        "idLoanType": 2
+                        },
+                  "statusLoanApplication": "Rechazado"
             }
             """;
     // ---------------------------
@@ -169,6 +194,7 @@ public class Constants {
           "totalItems": 12,
           "items": [
             {
+              "loanId": 3,
               "amount": 5000.0,
               "term": 12,
               "email": "john.doe@mail.com",
@@ -180,6 +206,7 @@ public class Constants {
               "monthlyAmount": 450.0
             },
             {
+              "loanId": 4,
               "amount": 10000.0,
               "term": 24,
               "email": "jane.smith@mail.com",
