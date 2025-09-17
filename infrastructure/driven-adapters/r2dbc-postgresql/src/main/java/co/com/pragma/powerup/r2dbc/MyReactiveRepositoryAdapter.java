@@ -9,6 +9,7 @@ import co.com.pragma.powerup.r2dbc.entity.LoanApplicationListItemEntity;
 import co.com.pragma.powerup.r2dbc.helper.ReactiveAdapterOperations;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
@@ -58,5 +59,10 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
                 .map(la -> mapper.map(la, LoanApplication.class));
     }
 
+    @Override
+    public Flux<LoanApplication> findApprovedLoansByIdCard(String idCard){
+        return repository.findApprovedLoansByIdCard(idCard)
+                .map( la -> mapper.map(la, LoanApplication.class));
+    }
 
 }

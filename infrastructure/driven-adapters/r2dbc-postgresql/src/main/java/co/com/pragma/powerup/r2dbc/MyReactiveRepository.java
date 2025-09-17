@@ -57,5 +57,9 @@ public interface MyReactiveRepository extends ReactiveCrudRepository<LoanApplica
     @Query("UPDATE loanapplications SET id_status = :idStatus WHERE loan_id = :loanId RETURNING *")
     Mono<LoanApplicationEntity> updateStatus(@Param("loanId") Long loanId,
                                              @Param("idStatus") Long idStatus);
+
+    @Query("SELECT la.* FROM loanapplications la JOIN users u ON la.email = u.email_address " +
+            "WHERE u.id_card = :idCard AND la.id_status = (SELECT id_status FROM status WHERE name = 'Aprobado')")
+    Flux<LoanApplicationEntity> findApprovedLoansByIdCard(@Param("idCard") String idCard);
 }
 

@@ -16,8 +16,10 @@ public class Constants {
     // HTTP
     // ---------------------------
     public static final String PATH_LOAN_APPLICATION = "/api/v1/solicitud";
+    public static final String PATH_CAPACITY = "/api/v1/calcular-capacidad";
     public static final String CONTENT_TYPE = "application/json";
     public static final String NAME_FUNCTION = "createLoanApplication";
+    public static final String NAME_FUNCTION_CAPACITY = "calculateDebtCapacity";
     public static final String GET_NAME_FUNCTION = "getLoanApplication";
     public static final String PUT_NAME_FUNCTION = "putLoanApplication";
     public static final String API_CREDIYA = "API CrediYa";
@@ -43,6 +45,8 @@ public class Constants {
     public static final String FORBIDDEN = "FORBIDDEN";
     public static final String ADAPTER_URL = "${adapter.restconsumer.url}";
     public static final String ADAPTER_TIMEOUT ="${adapter.restconsumer.timeout}";
+    public static final String NOT_FOUND_USER = "User not found";
+    public static final String INTEREST_RATE_NEED_IT = "InterestRate must be provided";
 
 
 
@@ -50,6 +54,7 @@ public class Constants {
     // LOGGING MESSAGES
     // ---------------------------
     public static final String LOG_LOAN_APP_RECEIVED = "Loan request received";
+    public static final String LOG_CAPACITY_RECEIVED = "Capacity request received";
     public static final String LOG_AMOUNT_OUT_OF_RANGE = "AMOUNT OUT OF RANGE: {}";
     public static final String LOG_LOAN_TYPE_NOT_FOUND = "Error, loan type not found: {}";
     public static final String LOG_STATUS_NOT_FOUND = "Error, status not found: {}";
@@ -58,10 +63,13 @@ public class Constants {
     public static final String LOG_UNEXPECTED_ERROR = "Unexpected error: {}";
     public static final String LOG_RECEIVED_DATA = "Received data: {}";
     public static final String LOG_LOAN_APP_CREATED = "Loan application created with status: {}";
+    public static final String LOG_CAPACITY_CREATED = "Calculate capacity debt";
     public static final String LOG_LOAN_APP_CREATION_ERROR = "Error creating loan application: {}";
+    public static final String LOG_CAPACITY_ERROR = "Error calculating capacity debt";
     public static final String LOG_ERROR_USER = "Error: ";
     public static final String LOG_ERROR_GET_USER = "Error user not found";
     public static final String LOG_ERROR_GETTING_USER = "Error get user: {}";
+    public static final String LOG_ERROR_INVALID_PARAMETER = "Invalid parameter error: {}";
     public static final String LOG_USER_ID_CARD_MISMATCH = "ID Card mismatch: provided  does not match expected: {}";
     public static final String LOG_NO_LOAN_APP_ERROR = "No loan app found: {}";
     public static final String LOG_INVALID_PAGINATION_ERROR = "Invalid pagination: {}";
@@ -91,6 +99,7 @@ public class Constants {
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
     public static final String UNEXPECTED_ERROR = "An unexpected error has occurred";
     public static final String USER_NOT_FOUND = "USER_NOT_FOUND";
+
     // ---------------------------
     // SUCCESS RESPONSES
     // ---------------------------

@@ -42,7 +42,8 @@ adapter:
     url: "${MS_USUARIOS_URL:http://localhost:8083/api/v1}"
   sqs:
     region: "us-east-2"
-    queueUrl: "https://sqs.us-east-2.amazonaws.com/498606688180/solicitudes-status-queue"
+    queueUrlNotify: "https://sqs.us-east-2.amazonaws.com/498606688180/solicitudes-status-queue"
+    queueUrlValidate: "https://sqs.us-east-2.amazonaws.com/498606688180/solicitudes-validate-queue"
 resilience4j:
   circuitbreaker:
     instances:

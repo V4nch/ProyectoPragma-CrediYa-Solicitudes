@@ -4,6 +4,8 @@ import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.pragma.powerup.model.loanapplication.gateways.NotificationQueueRepository;
+import co.com.pragma.powerup.model.loanapplication.gateways.ValidateQueueRepository;
+import co.com.pragma.powerup.model.loanapplication.messageSQS.ValidationMessage;
 import co.com.pragma.powerup.model.loanapplication.request.UpdateLoanStatusRequest;
 import co.com.pragma.powerup.model.loanapplication.response.LoanApplicationListItem;
 import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
@@ -25,13 +27,16 @@ public class LoanApplicationUseCase {
     private final StatusRepository statusRepository;
     private final UserRepository userRepository;
     private final NotificationQueueRepository notificationQueueRepository;
+    private final ValidateQueueRepository validateQueueRepository;
 
     public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication,String idCard, String idCardFromToken){
-        return getUserByIdCard(loanApplication, idCard,idCardFromToken)
-                .flatMap(loanApp -> validateLoanType(loanApp.getIdLoanType()))
-                .flatMap(loanType -> validateAmount(loanApplication, loanType))
+        return getUserByIdCard(loanApplication, idCard, idCardFromToken)
+                .flatMap(loanApp -> validateLoanType(loanApp.getIdLoanType())
+                        .flatMap(loanType -> attachLoanType(loanApp, loanType)))
+                .flatMap(this::validateAmount)
                 .flatMap(this::assignPendingStatus)
-                .flatMap(this::saveApplication);
+                .flatMap(loanApplicationRepository::save)
+                .flatMap(la -> handleAutomaticValidation(la,idCard));
     }
 
     public Mono<PageResponse<LoanApplicationListItem>> getLoanApp(int page, int size, String filter) {
@@ -54,7 +59,7 @@ public class LoanApplicationUseCase {
             .flatMap(statusId ->
                     loanApplicationRepository.updateStatus(request.getLoanId(), statusId.getIdStatus()))
             .flatMap(updatedLoan ->
-                    notificationQueueRepository.send(
+                    notificationQueueRepository.sendNotification(
                         String.format("{\"loanId\": %d, \"email\": \"%s\", \"status\": \"%s\"}",
                             request.getLoanId(), updatedLoan.getEmail(), request.getNewStatus()
                         )
@@ -63,6 +68,34 @@ public class LoanApplicationUseCase {
                         new ResponseLoanApplication(updatedLoan, request.getNewStatus())
                     )
             );
+    }
+    private Mono<LoanApplication> attachLoanType(LoanApplication loanApp, LoanType loanType) {
+        loanApp.setLoanType(loanType);
+        return Mono.just(loanApp);
+    }
+
+    private Mono<ResponseLoanApplication> handleAutomaticValidation(LoanApplication newLoan,String idCard) {
+        if (requiresAutomaticValidation(newLoan)) {
+            ValidationMessage message = buildValidationMessage(newLoan, idCard);
+
+            return validateQueueRepository.sendValidation(message.toString())
+                    .thenReturn(new ResponseLoanApplication(newLoan, "En validacion"));
+        }
+        return Mono.just(new ResponseLoanApplication(newLoan, "pendiente de revision"));
+    }
+
+    private boolean requiresAutomaticValidation(LoanApplication loan) {
+        return loan.getLoanType() != null
+                && loan.getLoanType().isAutomaticValidation();
+    }
+
+    private ValidationMessage buildValidationMessage(LoanApplication loan, String idCard) {
+        return ValidationMessage.builder()
+                .idCard(loan.getIdCard())
+                .amount(loan.getAmount())
+                .term(loan.getTerm())
+                .interestRate(loan.getLoanType().getInterestRate())
+                .build();
     }
 
     private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication,
@@ -83,9 +116,9 @@ public class LoanApplicationUseCase {
                 .switchIfEmpty(Mono.error(new LoanTypeNotFoundException(Constants.LOAN_TYPE_NOT_FOUND_MESSAGE)));
     }
 
-    private Mono<LoanApplication> validateAmount(LoanApplication loanApplication, LoanType loanType) {
-        if (loanApplication.getAmount() < loanType.getMinimumAmount() ||
-                loanApplication.getAmount() > loanType.getMaximumAmount()) {
+    private Mono<LoanApplication> validateAmount(LoanApplication loanApplication) {
+        if (loanApplication.getAmount() < loanApplication.getLoanType().getMinimumAmount() ||
+                loanApplication.getAmount() > loanApplication.getLoanType().getMaximumAmount()) {
             return Mono.error(new AmountOutOfRangeException(Constants.LOAN_AMOUNT_OUT_RANGE_MESSAGE));
         }
         return Mono.just(loanApplication);
@@ -98,11 +131,5 @@ public class LoanApplicationUseCase {
                     loanApplication.setIdStatus(status.getIdStatus());
                     return loanApplication;
                 });
-    }
-
-    private Mono<ResponseLoanApplication> saveApplication(LoanApplication loanApplication) {
-        return loanApplicationRepository.save(loanApplication)
-                    .map(la -> new ResponseLoanApplication(la, Constants.STATUS_PENDING_REVIEW)
-                );
     }
 }
