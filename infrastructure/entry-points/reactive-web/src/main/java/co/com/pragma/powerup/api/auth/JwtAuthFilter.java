@@ -1,5 +1,6 @@
 package co.com.pragma.powerup.api.auth;
 
+import co.com.pragma.powerup.model.utils.Constants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -32,6 +33,9 @@ public class JwtAuthFilter implements WebFilter {
 
         if (path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs") || path.startsWith("/webjars")) {
             return chain.filter(exchange);
+        }
+        if (path.equals(Constants.PATH_CAPACITY)) {
+            return chain.filter(exchange); // no validar JWT
         }
 
         String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");

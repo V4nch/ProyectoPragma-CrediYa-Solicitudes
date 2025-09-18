@@ -22,11 +22,11 @@ public class CapacityRouterRest {
                     method = {RequestMethod.POST},
                     produces = { Constants.CONTENT_TYPE },
                     consumes = { Constants.CONTENT_TYPE },
-                    beanClass = LoanApplicationHandler.class,
+                    beanClass = CapacityHandler.class,
                     beanMethod = Constants.NAME_FUNCTION_CAPACITY
             )
     })
-    public RouterFunction<ServerResponse> routerFunction(CapacityHandler handler) {
+    public RouterFunction<ServerResponse> capacityRouterFunction(CapacityHandler handler) {
         return route(POST(Constants.PATH_CAPACITY), handler::calculateDebtCapacity);
 
     }

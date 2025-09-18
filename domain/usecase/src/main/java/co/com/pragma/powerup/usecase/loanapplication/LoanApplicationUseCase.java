@@ -91,7 +91,7 @@ public class LoanApplicationUseCase {
 
     private ValidationMessage buildValidationMessage(LoanApplication loan, String idCard) {
         return ValidationMessage.builder()
-                .idCard(loan.getIdCard())
+                .idCard(idCard)
                 .amount(loan.getAmount())
                 .term(loan.getTerm())
                 .interestRate(loan.getLoanType().getInterestRate())

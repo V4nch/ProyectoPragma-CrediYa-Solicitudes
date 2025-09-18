@@ -12,10 +12,10 @@ import java.util.List;
 @Builder(toBuilder = true)
 @ToString
 public class CapacityResponse {
-    private String status;
     private Double maxCapacity;
     private Double currentMonthlyDebt;
     private Double availableCapacity;
+    private String baseSalary;
     private Double newLoanPayment;
     private List<PaymentPlan> paymentPlan;
 }

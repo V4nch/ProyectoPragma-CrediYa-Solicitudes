@@ -53,21 +53,18 @@ public class DebtCapacityUseCase {
         double calculateMaxCapacity = calculateMaxCapacity(user);
         double availableCapacity = calculateMaxCapacity - calculateCurrentDebt;
         double newPayment = calculateMonthlyPayment(request.getAmount(), interestRate, request.getTerm());
-
-        String decision = makeDecision(request, user, availableCapacity, newPayment);
         List<PaymentPlan> plan = generatePaymentPlan(request.getAmount(), interestRate, request.getTerm());
 
         return CapacityResponse.builder()
-                .status(decision)
                 .maxCapacity(round(calculateMaxCapacity))
                 .currentMonthlyDebt(round(calculateCurrentDebt))
                 .availableCapacity(round(availableCapacity))
                 .newLoanPayment(round(newPayment))
                 .paymentPlan(plan)
+                .baseSalary(user.getBaseSalary())
                 .build();
     }
 
-// ------------------ Reglas de negocio ------------------
 
     private double calculateCurrentDebt(List<LoanApplication> loans) {
         return loans.stream()
@@ -79,16 +76,6 @@ public class DebtCapacityUseCase {
         return Double.parseDouble(user.getBaseSalary()) * RATIO;
     }
 
-    private String makeDecision(CapacityRequest request, User user, double capacidadDisponible, double cuotaNuevo) {
-        if (cuotaNuevo <= capacidadDisponible) {
-            return request.getAmount() > Double.parseDouble(user.getBaseSalary()) * 5
-                    ? "REVISION_MANUAL"
-                    : "APROBADO";
-        }
-        return "RECHAZADO";
-    }
-
-    // calcula cuota mensual para un LoanApplication existente (usa interestRate en loan)
     private double calculateMonthlyPaymentFromLoan(LoanApplication la) {
 
         if (interestRate == null) interestRate = 0.0;
@@ -111,24 +98,23 @@ public class DebtCapacityUseCase {
     private List<PaymentPlan> generatePaymentPlan(double principal, double annualInterestPercent, int months) {
         List<PaymentPlan> plan = new ArrayList<>();
         double monthlyRate = annualInterestPercent / 100.0 / 12.0;
-        double cuota = calculateMonthlyPayment(principal, annualInterestPercent, months);
-        double balance = principal;
+        double loanPayment = calculateMonthlyPayment(principal, annualInterestPercent, months);
+
 
         for (int m = 1; m <= months; m++) {
-            double interest = balance * monthlyRate;
-            double principalPaid = cuota - interest;
+            double interest = principal * monthlyRate;
+            double principalPaid = loanPayment - interest;
             if (m == months) {
-                // ajustar últimos cents por redondeo
-                principalPaid = balance;
-                cuota = principalPaid + interest;
+                principalPaid = principal;
+                loanPayment = principalPaid + interest;
             }
-            balance -= principalPaid;
+            principal -= principalPaid;
             plan.add(PaymentPlan.builder()
                     .month(m)
-                    .totalPayment(round(cuota))
+                    .totalPayment(round(loanPayment))
                     .principal(round(principalPaid))
                     .interest(round(interest))
-                    .remainingBalance(round(Math.max(balance, 0.0)))
+                    .remainingBalance(round(Math.max(principal, 0.0)))
                     .build());
         }
         return plan;

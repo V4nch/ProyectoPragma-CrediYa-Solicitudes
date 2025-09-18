@@ -50,6 +50,7 @@ public class Constants {
 
 
 
+
     // ---------------------------
     // LOGGING MESSAGES
     // ---------------------------
@@ -82,8 +83,10 @@ public class Constants {
     // ROUTER OPERATION
     // ---------------------------
     public static final String SUMMARY_REGISTER_LOAN_APP = "Register loan application";
+    public static final String SUMMARY_CALCULATE_CAPACITY_APP = "Calculate capacity debt";
     public static final String SUMMARY_UPDATE_LOAN_APP = "Update status loan application";
     public static final String DESCRIPTION_REGISTER_LOAN_APP = "Allows registering a new application";
+    public static final String DESCRIPTION_CALCULATE_CAPACITY_APP = "Allows calculate a new capacity debt";
     public static final String DESCRIPTION_UPDATE_LOAN_APP = "Allows an update for a new status";
     public static final String SUMMARY_GET_LOAN_APP = "GET loan application";
     public static final String DESCRIPTION_GET_LOAN_APP = "Allows getting a loan application";
@@ -104,6 +107,7 @@ public class Constants {
     // SUCCESS RESPONSES
     // ---------------------------
     public static final String RESPONSE_LOAN_APP_REGISTERED = "Loan application registered";
+    public static final String RESPONSE_CALCULATE_CAPACITY = "Capacity calculated";
     public static final String EXAMPLE_LOAN_APP_REGISTERED_NAME = "Registered loan application";
     public static final String EXAMPLE_LOAN_APP_REGISTERED_VALUE = """
             {
@@ -114,6 +118,32 @@ public class Constants {
                         "idLoanType": 1
                         },
                   "statusLoanApplication": "Pendiente de revision"
+            }
+            """;
+    public static final String EXAMPLE_CALCULATE_CAPACITY_NAME = "Calculate capacity debt";
+    public static final String EXAMPLE_CALCULATE_CAPACITY_REQUEST_VALUE = """
+            {
+                "idCard" : "1094953",
+                "amount" : 1500000,
+                "term": 36,
+                "interestRate": 1.1
+            }
+            """;
+    public static final String EXAMPLE_CALCULATE_CAPACITY_RESPONSE_VALUE = """
+            {
+                "maxCapacity" : 1500000,
+                "currentMonthlyDebt": 360000,
+                "availableCapacity": 1000000,
+                "newLoanPayment": 150000,
+                "paymentPlan": [
+                    {
+                        "month": 4
+                        "totalPayment": 4000000
+                        "principal": 200000
+                        "interest": 1.1
+                        "remainingBalance": 100
+                    }
+                ]
             }
             """;
     public static final String EXAMPLE_LOAN_APP_REQUEST_VALUE = """
@@ -250,5 +280,19 @@ public class Constants {
           "message": "Unexpected error while querying the repository."
         }
         """;
+    public static final String ERROR_INVALID_PARAMETER = "Invalid parameter error";
+    public static final String EXAMPLE_INVALID_PARAMETER_VALUE = """
+            {
+              "code": "BAD_REQUEST",
+              "message": "Invalid parameters"
+            }
+            """;
+    public static final String EXAMPLE_USER_NOT_FOUND_NAME = "User not found error";
+    public static final String EXAMPLE_USER_NOT_FOUND_VALUE = """
+            {
+              "code": "NOT_FOUND",
+              "message": "User not found"
+            }
+            """;
 
 }

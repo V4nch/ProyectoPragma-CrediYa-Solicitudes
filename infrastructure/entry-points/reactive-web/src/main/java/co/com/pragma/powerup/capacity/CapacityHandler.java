@@ -27,16 +27,16 @@ public class CapacityHandler {
 
 
     @Operation(
-        summary =Constants.SUMMARY_REGISTER_LOAN_APP,
-        description =Constants.DESCRIPTION_REGISTER_LOAN_APP,
+        summary =Constants.SUMMARY_CALCULATE_CAPACITY_APP,
+        description =Constants.DESCRIPTION_CALCULATE_CAPACITY_APP,
         requestBody = @RequestBody(
             required = true,
             content = @Content(
                 schema = @Schema(implementation = CapacityRequest.class),
                 examples = {
                     @ExampleObject(
-                        name =Constants.EXAMPLE_LOAN_APP_REGISTERED_NAME,
-                        value =Constants.EXAMPLE_LOAN_APP_REQUEST_VALUE
+                        name =Constants.EXAMPLE_CALCULATE_CAPACITY_NAME,
+                        value =Constants.EXAMPLE_CALCULATE_CAPACITY_REQUEST_VALUE
                     )
                 }
             )
@@ -44,13 +44,13 @@ public class CapacityHandler {
         responses = {
             @ApiResponse(
                 responseCode = Constants.CODE_200,
-                description = Constants.RESPONSE_LOAN_APP_REGISTERED,
+                description = Constants.RESPONSE_CALCULATE_CAPACITY,
                 content = @Content(
                     schema = @Schema(implementation = CapacityResponse.class),
                     examples = {
                         @ExampleObject(
-                            name =Constants.EXAMPLE_LOAN_APP_REGISTERED_NAME,
-                            value =Constants.EXAMPLE_LOAN_APP_REGISTERED_VALUE
+                            name =Constants.EXAMPLE_CALCULATE_CAPACITY_NAME,
+                            value =Constants.EXAMPLE_CALCULATE_CAPACITY_RESPONSE_VALUE
                         )
                     }
                 )
@@ -62,8 +62,8 @@ public class CapacityHandler {
                     schema = @Schema(implementation = ErrorResponse.class),
                     examples = {
                         @ExampleObject(
-                            name =Constants.EXAMPLE_AMOUNT_OUT_OF_RANGE_NAME,
-                            value =Constants.EXAMPLE_AMOUNT_OUT_OF_RANGE_VALUE
+                            name =Constants.ERROR_INVALID_PARAMETER,
+                            value =Constants.EXAMPLE_INVALID_PARAMETER_VALUE
                         )
                     }
                 )
@@ -75,8 +75,8 @@ public class CapacityHandler {
                     schema = @Schema(implementation = ErrorResponse.class),
                     examples = {
                         @ExampleObject(
-                            name =Constants.EXAMPLE_STATUS_NOT_FOUND_NAME,
-                            value =Constants.EXAMPLE_STATUS_NOT_FOUND_VALUE
+                            name =Constants.EXAMPLE_USER_NOT_FOUND_NAME,
+                            value =Constants.EXAMPLE_USER_NOT_FOUND_VALUE
                         )
                     }
                 )
