@@ -1,12 +1,16 @@
 package co.com.pragma.powerup.usecase.loanapplication;
 
+import co.com.pragma.powerup.model.debtcapacity.request.CapacityRequest;
+import co.com.pragma.powerup.model.debtcapacity.response.CapacityResponse;
 import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
+import co.com.pragma.powerup.model.loanapplication.gateways.CapacityRestRepository;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.pragma.powerup.model.loanapplication.gateways.NotificationQueueRepository;
 import co.com.pragma.powerup.model.loanapplication.request.UpdateLoanStatusRequest;
 import co.com.pragma.powerup.model.loanapplication.response.LoanApplicationListItem;
 import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
+import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
 import co.com.pragma.powerup.model.loantype.LoanType;
 import co.com.pragma.powerup.model.loantype.gateways.LoanTypeRepository;
 import co.com.pragma.powerup.model.status.Status;
@@ -35,6 +39,7 @@ class RegisterLoanApplicationUseCaseTest {
     private LoanApplicationUseCase useCase;
     private UserRepository userRepository;
     private NotificationQueueRepository sqsRepository;
+    private CapacityRestRepository capacityRestRepository;
 
 
     @BeforeEach
@@ -43,48 +48,118 @@ class RegisterLoanApplicationUseCaseTest {
         loanTypeRepository = mock(LoanTypeRepository.class);
         statusRepository = mock(StatusRepository.class);
         userRepository = mock(UserRepository.class);
+        capacityRestRepository = mock(CapacityRestRepository.class);
         sqsRepository = mock(NotificationQueueRepository.class);
+
 
         useCase = new LoanApplicationUseCase(
                 loanApplicationRepository,
                 loanTypeRepository,
                 statusRepository,
                 userRepository,
-                sqsRepository
+                sqsRepository,
+                capacityRestRepository
         );
     }
 
 
     @Test
-    void createLoanApplication_setsUserEmail() {
-        LoanApplication loanApplication = new LoanApplication();
-        loanApplication.setIdLoanType(80L);
-        loanApplication.setAmount(3000.0);
+    void testCreateLoanApplication_success() {
+        // Arrange
+        LoanType loanType = LoanType.builder()
+                .idLoanType(1L)
+                .minimumAmount(1000.0)
+                .maximumAmount(10000.0)
+                .interestRate(5.0)
+                .automaticValidation(true)
+                .build();
 
-        LoanType loanType = new LoanType();
-        loanType.setIdLoanType(80L);
-        loanType.setMinimumAmount(1000.0);
-        loanType.setMaximumAmount(10000.0);
+        LoanApplication loan = LoanApplication.builder()
+                .loanId(1L)
+                .idLoanType(1L)
+                .amount(5000.0)
+                .term(12)
+                .build();
 
-        Status status = new Status();
-        status.setIdStatus(1L);
-        status.setName(Constants.STATUS_PENDING_REVIEW);
+        User user = User.builder()
+                .idCard("123456")
+                .emailAddress("user@mail.com")
+                .build();
 
-        var user = new User();
-        user.setIdCard("789"); // necesario por la comparación en getUserByIdCard
-        user.setEmailAddress("test@mail.com");
+        Status status = Status.builder()
+                .idStatus(1L)
+                .name(Constants.STATUS_PENDING_REVIEW)
+                .build();
 
-        when(userRepository.getUserByIdCard("789")).thenReturn(Mono.just(user));
-        when(loanTypeRepository.findById(80L)).thenReturn(Mono.just(loanType));
+        when(userRepository.getUserByIdCard("123456")).thenReturn(Mono.just(user));
+        when(loanTypeRepository.findById(1L)).thenReturn(Mono.just(loanType));
         when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.just(status));
-        when(loanApplicationRepository.save(any(LoanApplication.class)))
-                .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+        when(loanApplicationRepository.save(any(LoanApplication.class))).thenReturn(Mono.just(loan));
+        when(capacityRestRepository.calculateDebtCapacity(any(CapacityRequest.class)))
+                .thenReturn(Mono.just(new CapacityResponse(/* inicializa los campos necesarios */)));
 
-        StepVerifier.create(useCase.createLoanApplication(loanApplication,"789","789"))
-                .expectNextMatches(response ->
-                        "test@mail.com".equals(response.getLoanApplication().getEmail()))
+        // Act
+        Mono<ResponseLoanApplication> result = useCase.createLoanApplication(loan, "123456", "123456");
+
+        // Assert
+        StepVerifier.create(result)
+                .expectNextMatches(resp ->
+                        resp.getLoanApplication().getLoanId().equals(1L) &&
+                                resp.getLoanApplication().getEmail().equals("user@mail.com") &&
+                                ("En validacion".equals(resp.getStatusLoanApplication()) ||
+                                        "pendiente de revision".equals(resp.getStatusLoanApplication()))
+                )
                 .verifyComplete();
     }
+    @Test
+    void testCreateLoanApplication_fail() {
+        // Arrange
+        LoanType loanType = LoanType.builder()
+                .idLoanType(1L)
+                .minimumAmount(1000.0)
+                .maximumAmount(10000.0)
+                .interestRate(5.0)
+                .automaticValidation(false)
+                .build();
+
+        LoanApplication loan = LoanApplication.builder()
+                .loanId(1L)
+                .idLoanType(1L)
+                .amount(5000.0)
+                .term(12)
+                .build();
+
+        User user = User.builder()
+                .idCard("123456")
+                .emailAddress("user@mail.com")
+                .build();
+
+        Status status = Status.builder()
+                .idStatus(1L)
+                .name(Constants.STATUS_PENDING_REVIEW)
+                .build();
+
+        when(userRepository.getUserByIdCard("123456")).thenReturn(Mono.just(user));
+        when(loanTypeRepository.findById(1L)).thenReturn(Mono.just(loanType));
+        when(statusRepository.findByName(Constants.STATUS_PENDING_REVIEW)).thenReturn(Mono.just(status));
+        when(loanApplicationRepository.save(any(LoanApplication.class))).thenReturn(Mono.just(loan));
+        when(capacityRestRepository.calculateDebtCapacity(any(CapacityRequest.class)))
+                .thenReturn(Mono.just(new CapacityResponse(/* inicializa los campos necesarios */)));
+
+        // Act
+        Mono<ResponseLoanApplication> result = useCase.createLoanApplication(loan, "123456", "123456");
+
+        // Assert
+        StepVerifier.create(result)
+                .expectNextMatches(resp ->
+                        resp.getLoanApplication().getLoanId().equals(1L) &&
+                                resp.getLoanApplication().getEmail().equals("user@mail.com") &&
+                                ("En validacion".equals(resp.getStatusLoanApplication()) ||
+                                        "pendiente de revision".equals(resp.getStatusLoanApplication()))
+                )
+                .verifyComplete();
+    }
+
 
     @Test
     void createLoanApplication_statusNotFound_messageCheck() {
@@ -427,7 +502,8 @@ class RegisterLoanApplicationUseCaseTest {
         when(loanApplicationRepository.findById(1L)).thenReturn(Mono.just(loan));
         when(statusRepository.findByName("Aprobado")).thenReturn(Mono.just(status));
         when(loanApplicationRepository.updateStatus(1L, 2L)).thenReturn(Mono.just(loan));
-        when(sqsRepository.send(anyString())).thenReturn(Mono.empty());
+        when(sqsRepository.sendNotification(anyString())).thenReturn(Mono.empty());
+
 
         StepVerifier.create(useCase.putLoanApp(request))
                 .expectNextMatches(resp ->
@@ -496,7 +572,7 @@ class RegisterLoanApplicationUseCaseTest {
         when(loanApplicationRepository.findById(1L)).thenReturn(Mono.just(loan));
         when(statusRepository.findByName("Aprobado")).thenReturn(Mono.just(status));
         when(loanApplicationRepository.updateStatus(1L, 2L)).thenReturn(Mono.just(loan));
-        when(sqsRepository.send(anyString()))
+        when(sqsRepository.sendNotification(anyString()))
                 .thenReturn(Mono.error(new RuntimeException("SQS unavailable")));
 
         StepVerifier.create(useCase.putLoanApp(request))
@@ -504,5 +580,7 @@ class RegisterLoanApplicationUseCaseTest {
                         err.getMessage().equals("SQS unavailable"))
                 .verify();
     }
+
+
 
 }

@@ -1,11 +1,11 @@
 package co.com.pragma.powerup.usecase.loanapplication;
 
+import co.com.pragma.powerup.model.debtcapacity.request.CapacityRequest;
 import co.com.pragma.powerup.model.exceptions.*;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
+import co.com.pragma.powerup.model.loanapplication.gateways.CapacityRestRepository;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.pragma.powerup.model.loanapplication.gateways.NotificationQueueRepository;
-import co.com.pragma.powerup.model.loanapplication.gateways.ValidateQueueRepository;
-import co.com.pragma.powerup.model.loanapplication.messageSQS.ValidationMessage;
 import co.com.pragma.powerup.model.loanapplication.request.UpdateLoanStatusRequest;
 import co.com.pragma.powerup.model.loanapplication.response.LoanApplicationListItem;
 import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
@@ -27,7 +27,7 @@ public class LoanApplicationUseCase {
     private final StatusRepository statusRepository;
     private final UserRepository userRepository;
     private final NotificationQueueRepository notificationQueueRepository;
-    private final ValidateQueueRepository validateQueueRepository;
+    private final CapacityRestRepository capacityRestRepository;
 
     public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication,String idCard, String idCardFromToken){
         return getUserByIdCard(loanApplication, idCard, idCardFromToken)
@@ -35,7 +35,7 @@ public class LoanApplicationUseCase {
                         .flatMap(loanType -> attachLoanType(loanApp, loanType)))
                 .flatMap(this::validateAmount)
                 .flatMap(this::assignPendingStatus)
-                .flatMap(loanApplicationRepository::save)
+                .flatMap(this::saveLoanApp)
                 .flatMap(la -> handleAutomaticValidation(la,idCard));
     }
 
@@ -51,6 +51,8 @@ public class LoanApplicationUseCase {
                         Constants.ERROR_NO_RESULTS)));
     }
 
+
+
     public Mono<ResponseLoanApplication> putLoanApp(UpdateLoanStatusRequest request) {
         return loanApplicationRepository.findById(request.getLoanId())
             .switchIfEmpty(Mono.error(new NoLoanApplicationsFoundException(Constants.ERROR_NOT_FOUND_LOAN)))
@@ -60,8 +62,8 @@ public class LoanApplicationUseCase {
                     loanApplicationRepository.updateStatus(request.getLoanId(), statusId.getIdStatus()))
             .flatMap(updatedLoan ->
                     notificationQueueRepository.sendNotification(
-                        String.format("{\"loanId\": %d, \"email\": \"%s\", \"status\": \"%s\"}",
-                            request.getLoanId(), updatedLoan.getEmail(), request.getNewStatus()
+                        String.format("{\"type\": \"%s\" ,\"loanId\": %d, \"email\": \"%s\", \"status\": \"%s\"}",
+                            Constants.LOAN_STATE,request.getLoanId(), updatedLoan.getEmail(), request.getNewStatus()
                         )
                     )
                     .thenReturn(
@@ -74,28 +76,23 @@ public class LoanApplicationUseCase {
         return Mono.just(loanApp);
     }
 
-    private Mono<ResponseLoanApplication> handleAutomaticValidation(LoanApplication newLoan,String idCard) {
+    private Mono<ResponseLoanApplication> handleAutomaticValidation(LoanApplication newLoan, String idCard) {
         if (requiresAutomaticValidation(newLoan)) {
-            ValidationMessage message = buildValidationMessage(newLoan, idCard);
-
-            return validateQueueRepository.sendValidation(message.toString())
+            return capacityRestRepository.calculateDebtCapacity(
+                            new CapacityRequest(newLoan.getLoanId(), idCard, newLoan.getAmount(), newLoan.getTerm(), newLoan.getLoanType().getInterestRate()))
                     .thenReturn(new ResponseLoanApplication(newLoan, "En validacion"));
         }
         return Mono.just(new ResponseLoanApplication(newLoan, "pendiente de revision"));
     }
 
-    private boolean requiresAutomaticValidation(LoanApplication loan) {
-        return loan.getLoanType() != null
-                && loan.getLoanType().isAutomaticValidation();
+    private Mono<LoanApplication> saveLoanApp(LoanApplication loanApp){
+        return  loanApplicationRepository.save(loanApp).thenReturn(loanApp);
     }
 
-    private ValidationMessage buildValidationMessage(LoanApplication loan, String idCard) {
-        return ValidationMessage.builder()
-                .idCard(idCard)
-                .amount(loan.getAmount())
-                .term(loan.getTerm())
-                .interestRate(loan.getLoanType().getInterestRate())
-                .build();
+    private boolean requiresAutomaticValidation(LoanApplication loan) {
+        System.out.println(loan.getLoanType().isAutomaticValidation());
+        return loan.getLoanType() != null
+                && loan.getLoanType().isAutomaticValidation();
     }
 
     private Mono<LoanApplication> getUserByIdCard(LoanApplication loanApplication,

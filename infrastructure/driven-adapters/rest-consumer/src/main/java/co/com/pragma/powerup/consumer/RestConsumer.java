@@ -2,6 +2,9 @@ package co.com.pragma.powerup.consumer;
 
 import co.com.pragma.powerup.consumer.dto.UserResponse;
 import co.com.pragma.powerup.consumer.mapper.UserMapper;
+import co.com.pragma.powerup.model.debtcapacity.request.CapacityRequest;
+import co.com.pragma.powerup.model.debtcapacity.response.CapacityResponse;
+import co.com.pragma.powerup.model.loanapplication.gateways.CapacityRestRepository;
 import co.com.pragma.powerup.model.user.User;
 import co.com.pragma.powerup.model.user.gateways.UserRepository;
 import co.com.pragma.powerup.model.utils.Constants;
@@ -16,7 +19,7 @@ import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
-public class RestConsumer implements UserRepository {
+public class RestConsumer implements UserRepository, CapacityRestRepository {
     private final WebClient client;
 
     @Override
@@ -40,4 +43,27 @@ public class RestConsumer implements UserRepository {
         });
 
     }
+
+    @Override
+    public Mono<CapacityResponse> calculateDebtCapacity(CapacityRequest request) {
+        return Mono.deferContextual(ctx -> {
+            String token = ctx.get("authToken");
+        return  client.post()
+                        .uri(Constants.PATH_CAPACITY)
+                        .header(HttpHeaders.AUTHORIZATION, token)
+                        .bodyValue(request)
+                        .retrieve()
+                        .bodyToMono(CapacityResponse.class)
+                        .timeout(Duration.ofSeconds(5))
+                        .onErrorMap(throwable -> {
+                            if (throwable instanceof WebClientResponseException) {
+                                return new RuntimeException(throwable.getMessage(), throwable
+                                );
+                            }
+                            return new RuntimeException("", throwable);
+                        });
+        });
+    }
+
+
 }

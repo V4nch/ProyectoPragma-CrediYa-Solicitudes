@@ -47,6 +47,8 @@ public class Constants {
     public static final String ADAPTER_TIMEOUT ="${adapter.restconsumer.timeout}";
     public static final String NOT_FOUND_USER = "User not found";
     public static final String INTEREST_RATE_NEED_IT = "InterestRate must be provided";
+    public static final String PAYMENT_PLAN = "PLAN_PAGOS";
+    public static final String LOAN_STATE = "ESTADO_SOLICITUD";
 
 
 

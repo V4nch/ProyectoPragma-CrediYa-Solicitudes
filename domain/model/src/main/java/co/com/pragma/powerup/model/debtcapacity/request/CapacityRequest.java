@@ -9,6 +9,7 @@ import lombok.*;
 @Builder(toBuilder = true)
 @ToString
 public class CapacityRequest {
+    private Long loanId;
     private String idCard;
     private Double amount;
     private Integer term;

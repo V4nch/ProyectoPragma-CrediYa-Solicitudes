@@ -7,6 +7,9 @@ import co.com.pragma.powerup.model.exceptions.InvalidParameterException;
 import co.com.pragma.powerup.model.exceptions.UserNotFoundException;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
+import co.com.pragma.powerup.model.loanapplication.gateways.NotificationQueueRepository;
+import co.com.pragma.powerup.model.loanapplication.gateways.ValidateQueueRepository;
+import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
 import co.com.pragma.powerup.model.user.User;
 import co.com.pragma.powerup.model.user.gateways.UserRepository;
 import co.com.pragma.powerup.model.utils.Constants;
@@ -22,6 +25,8 @@ public class DebtCapacityUseCase {
         private final LoanApplicationRepository loanApplicationRepository;
         private final UserRepository userRepository;
         private Double interestRate;
+        private final ValidateQueueRepository validateQueueRepository;
+        private final NotificationQueueRepository notificationQueueRepository;
 
     private static final double RATIO = 0.35; // 35%
 
@@ -45,7 +50,22 @@ public class DebtCapacityUseCase {
     private Mono<CapacityResponse> processCapacityCalculation(CapacityRequest request, User user, Double newLoanAnnualInterest) {
         return loanApplicationRepository.findApprovedLoansByIdCard(user.getIdCard())
                 .collectList()
-                .map(existingLoans -> buildResponse(user, request, newLoanAnnualInterest, existingLoans));
+                .map(existingLoans -> buildResponse(user, request, newLoanAnnualInterest, existingLoans))
+                .flatMap(this::sendMessageQueue)
+                .flatMap(capacityResponse ->
+                    notificationQueueRepository.sendNotification(
+                            String.format(
+                                    "{\"type\": \"%s\", \"loanId\": %d, \"paymentPlan\": %s }",
+                                    Constants.PAYMENT_PLAN,
+                                    request.getLoanId(),
+                                    capacityResponse.getPaymentPlan().toString()
+                            )
+                    ).then(Mono.just(capacityResponse)));
+    }
+
+    private Mono<CapacityResponse> sendMessageQueue(CapacityResponse message){
+        return validateQueueRepository.sendValidation(message.toString())
+                .thenReturn(message);
     }
 
     private CapacityResponse buildResponse(User user, CapacityRequest request, Double interestRate, List<LoanApplication> existingLoans) {
@@ -56,12 +76,14 @@ public class DebtCapacityUseCase {
         List<PaymentPlan> plan = generatePaymentPlan(request.getAmount(), interestRate, request.getTerm());
 
         return CapacityResponse.builder()
+                .loanId(request.getLoanId())
                 .maxCapacity(round(calculateMaxCapacity))
                 .currentMonthlyDebt(round(calculateCurrentDebt))
                 .availableCapacity(round(availableCapacity))
                 .newLoanPayment(round(newPayment))
                 .paymentPlan(plan)
                 .baseSalary(user.getBaseSalary())
+                .amount(request.getAmount())
                 .build();
     }
 
