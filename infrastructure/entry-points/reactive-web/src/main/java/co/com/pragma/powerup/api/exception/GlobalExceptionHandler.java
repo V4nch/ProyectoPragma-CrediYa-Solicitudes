@@ -31,6 +31,14 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(Constants.STATUS_NOT_FOUND, ex.getMessage()));
     }
 
+    @ExceptionHandler(InvalidParameterException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidParameter(InvalidParameterException ex) {
+        log.warn(Constants.LOG_ERROR_INVALID_PARAMETER, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(Constants.BAD_REQUEST, ex.getMessage()));
+    }
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
         log.warn(Constants.LOG_ERROR_GETTING_USER, ex.getMessage());

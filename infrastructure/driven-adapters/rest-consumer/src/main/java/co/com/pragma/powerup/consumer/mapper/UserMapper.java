@@ -5,6 +5,6 @@ import co.com.pragma.powerup.model.user.User;
 
 public class UserMapper {
     public static User toDomain(UserResponse resp) {
-        return new User(resp.getIdCard(),resp.getEmailAddress());
+        return new User(resp.getIdCard(),resp.getEmailAddress(),resp.getBaseSalary());
     }
 }

@@ -16,8 +16,10 @@ public class Constants {
     // HTTP
     // ---------------------------
     public static final String PATH_LOAN_APPLICATION = "/api/v1/solicitud";
+    public static final String PATH_CAPACITY = "/api/v1/calcular-capacidad";
     public static final String CONTENT_TYPE = "application/json";
     public static final String NAME_FUNCTION = "createLoanApplication";
+    public static final String NAME_FUNCTION_CAPACITY = "calculateDebtCapacity";
     public static final String GET_NAME_FUNCTION = "getLoanApplication";
     public static final String PUT_NAME_FUNCTION = "putLoanApplication";
     public static final String API_CREDIYA = "API CrediYa";
@@ -42,7 +44,13 @@ public class Constants {
     public static final String USER_ID_CARD_MISMATCH = "ID Card mismatch: provided '%s' does not match expected '%s'.";
     public static final String FORBIDDEN = "FORBIDDEN";
     public static final String ADAPTER_URL = "${adapter.restconsumer.url}";
+    public static final String ADAPTER_LOAN_URL = "${adapter.restconsumer.loanUrl}";
     public static final String ADAPTER_TIMEOUT ="${adapter.restconsumer.timeout}";
+    public static final String NOT_FOUND_USER = "User not found";
+    public static final String INTEREST_RATE_NEED_IT = "InterestRate must be provided";
+    public static final String PAYMENT_PLAN = "PLAN_PAGOS";
+    public static final String LOAN_STATE = "ESTADO_SOLICITUD";
+
 
 
 
@@ -50,6 +58,7 @@ public class Constants {
     // LOGGING MESSAGES
     // ---------------------------
     public static final String LOG_LOAN_APP_RECEIVED = "Loan request received";
+    public static final String LOG_CAPACITY_RECEIVED = "Capacity request received";
     public static final String LOG_AMOUNT_OUT_OF_RANGE = "AMOUNT OUT OF RANGE: {}";
     public static final String LOG_LOAN_TYPE_NOT_FOUND = "Error, loan type not found: {}";
     public static final String LOG_STATUS_NOT_FOUND = "Error, status not found: {}";
@@ -58,10 +67,13 @@ public class Constants {
     public static final String LOG_UNEXPECTED_ERROR = "Unexpected error: {}";
     public static final String LOG_RECEIVED_DATA = "Received data: {}";
     public static final String LOG_LOAN_APP_CREATED = "Loan application created with status: {}";
+    public static final String LOG_CAPACITY_CREATED = "Calculate capacity debt";
     public static final String LOG_LOAN_APP_CREATION_ERROR = "Error creating loan application: {}";
+    public static final String LOG_CAPACITY_ERROR = "Error calculating capacity debt";
     public static final String LOG_ERROR_USER = "Error: ";
     public static final String LOG_ERROR_GET_USER = "Error user not found";
     public static final String LOG_ERROR_GETTING_USER = "Error get user: {}";
+    public static final String LOG_ERROR_INVALID_PARAMETER = "Invalid parameter error: {}";
     public static final String LOG_USER_ID_CARD_MISMATCH = "ID Card mismatch: provided  does not match expected: {}";
     public static final String LOG_NO_LOAN_APP_ERROR = "No loan app found: {}";
     public static final String LOG_INVALID_PAGINATION_ERROR = "Invalid pagination: {}";
@@ -74,8 +86,10 @@ public class Constants {
     // ROUTER OPERATION
     // ---------------------------
     public static final String SUMMARY_REGISTER_LOAN_APP = "Register loan application";
+    public static final String SUMMARY_CALCULATE_CAPACITY_APP = "Calculate capacity debt";
     public static final String SUMMARY_UPDATE_LOAN_APP = "Update status loan application";
     public static final String DESCRIPTION_REGISTER_LOAN_APP = "Allows registering a new application";
+    public static final String DESCRIPTION_CALCULATE_CAPACITY_APP = "Allows calculate a new capacity debt";
     public static final String DESCRIPTION_UPDATE_LOAN_APP = "Allows an update for a new status";
     public static final String SUMMARY_GET_LOAN_APP = "GET loan application";
     public static final String DESCRIPTION_GET_LOAN_APP = "Allows getting a loan application";
@@ -91,10 +105,12 @@ public class Constants {
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
     public static final String UNEXPECTED_ERROR = "An unexpected error has occurred";
     public static final String USER_NOT_FOUND = "USER_NOT_FOUND";
+
     // ---------------------------
     // SUCCESS RESPONSES
     // ---------------------------
     public static final String RESPONSE_LOAN_APP_REGISTERED = "Loan application registered";
+    public static final String RESPONSE_CALCULATE_CAPACITY = "Capacity calculated";
     public static final String EXAMPLE_LOAN_APP_REGISTERED_NAME = "Registered loan application";
     public static final String EXAMPLE_LOAN_APP_REGISTERED_VALUE = """
             {
@@ -105,6 +121,33 @@ public class Constants {
                         "idLoanType": 1
                         },
                   "statusLoanApplication": "Pendiente de revision"
+            }
+            """;
+    public static final String EXAMPLE_CALCULATE_CAPACITY_NAME = "Calculate capacity debt";
+    public static final String EXAMPLE_CALCULATE_CAPACITY_REQUEST_VALUE = """
+            {
+                "idCard" : "1094953",
+                "loanId" : 10,
+                "amount" : 1500000,
+                "term": 36,
+                "interestRate": 1.1
+            }
+            """;
+    public static final String EXAMPLE_CALCULATE_CAPACITY_RESPONSE_VALUE = """
+            {
+                "maxCapacity" : 1500000,
+                "currentMonthlyDebt": 360000,
+                "availableCapacity": 1000000,
+                "newLoanPayment": 150000,
+                "paymentPlan": [
+                    {
+                        "month": 4
+                        "totalPayment": 4000000
+                        "principal": 200000
+                        "interest": 1.1
+                        "remainingBalance": 100
+                    }
+                ]
             }
             """;
     public static final String EXAMPLE_LOAN_APP_REQUEST_VALUE = """
@@ -241,5 +284,19 @@ public class Constants {
           "message": "Unexpected error while querying the repository."
         }
         """;
+    public static final String ERROR_INVALID_PARAMETER = "Invalid parameter error";
+    public static final String EXAMPLE_INVALID_PARAMETER_VALUE = """
+            {
+              "code": "BAD_REQUEST",
+              "message": "Invalid parameters"
+            }
+            """;
+    public static final String EXAMPLE_USER_NOT_FOUND_NAME = "User not found error";
+    public static final String EXAMPLE_USER_NOT_FOUND_VALUE = """
+            {
+              "code": "NOT_FOUND",
+              "message": "User not found"
+            }
+            """;
 
 }

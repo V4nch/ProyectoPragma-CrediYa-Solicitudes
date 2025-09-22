@@ -3,6 +3,7 @@ package co.com.pragma.powerup.consumer.config;
 import co.com.pragma.powerup.model.utils.Constants;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,22 +20,36 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 public class RestConsumerConfig {
 
     private final String url;
+    private final String loanUrl;
 
     private final int timeout;
 
     public RestConsumerConfig(@Value(Constants.ADAPTER_URL) String url,
-                              @Value(Constants.ADAPTER_TIMEOUT) int timeout) {
+                              @Value(Constants.ADAPTER_TIMEOUT) int timeout,
+                              @Value(Constants.ADAPTER_LOAN_URL) String loanUrl) {
         this.url = url;
+        this.loanUrl = loanUrl;
         this.timeout = timeout;
+
+    }
+    @Bean
+    @Qualifier("userWebClient")
+    public WebClient userWebClient(WebClient.Builder builder) {
+        return builder
+                .baseUrl(url)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, Constants.CONTENT_TYPE)
+                .clientConnector(getClientHttpConnector())
+                .build();
     }
 
     @Bean
-    public WebClient getWebClient(WebClient.Builder builder) {
+    @Qualifier("loanWebClient")
+    public WebClient loanWebClient(WebClient.Builder builder) {
         return builder
-            .baseUrl(url)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, Constants.CONTENT_TYPE)
-            .clientConnector(getClientHttpConnector())
-            .build();
+                .baseUrl(loanUrl)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, Constants.CONTENT_TYPE)
+                .clientConnector(getClientHttpConnector())
+                .build();
     }
 
     private ClientHttpConnector getClientHttpConnector() {

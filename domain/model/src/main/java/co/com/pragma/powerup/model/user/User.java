@@ -14,5 +14,6 @@ import lombok.Setter;
 public class User {
     private String idCard;
     private String emailAddress;
+    private String baseSalary;
 
 }
