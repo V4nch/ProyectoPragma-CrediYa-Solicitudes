@@ -44,6 +44,7 @@ public class Constants {
     public static final String USER_ID_CARD_MISMATCH = "ID Card mismatch: provided '%s' does not match expected '%s'.";
     public static final String FORBIDDEN = "FORBIDDEN";
     public static final String ADAPTER_URL = "${adapter.restconsumer.url}";
+    public static final String ADAPTER_LOAN_URL = "${adapter.restconsumer.loanUrl}";
     public static final String ADAPTER_TIMEOUT ="${adapter.restconsumer.timeout}";
     public static final String NOT_FOUND_USER = "User not found";
     public static final String INTEREST_RATE_NEED_IT = "InterestRate must be provided";
@@ -126,6 +127,7 @@ public class Constants {
     public static final String EXAMPLE_CALCULATE_CAPACITY_REQUEST_VALUE = """
             {
                 "idCard" : "1094953",
+                "loanId" : 10,
                 "amount" : 1500000,
                 "term": 36,
                 "interestRate": 1.1

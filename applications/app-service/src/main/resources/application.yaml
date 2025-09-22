@@ -40,6 +40,7 @@ adapter:
   restconsumer:
     timeout: 5000
     url: "${MS_USUARIOS_URL:http://localhost:8083/api/v1}"
+    loanUrl: "${MS_LOAN_URL:http://localhost:8082/api/v1}"
   sqs:
     region: "us-east-2"
     queueUrlNotify: "https://sqs.us-east-2.amazonaws.com/498606688180/solicitudes-status-queue"

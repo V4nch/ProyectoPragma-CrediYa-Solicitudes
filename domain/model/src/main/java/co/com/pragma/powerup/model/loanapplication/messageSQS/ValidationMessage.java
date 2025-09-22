@@ -1,6 +1,9 @@
 package co.com.pragma.powerup.model.loanapplication.messageSQS;
 
+import co.com.pragma.powerup.model.debtcapacity.PaymentPlan;
 import lombok.*;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -9,8 +12,10 @@ import lombok.*;
 @Builder(toBuilder = true)
 @ToString
 public class ValidationMessage {
-    private String idCard;
+    private Long loanId;
     private Double amount;
-    private Integer term;
-    private Double interestRate;
+    private Double newLoanPayment;
+    private Double availableCapacity;
+    private String baseSalary;
+    private List<PaymentPlan> paymentPlan;
 }

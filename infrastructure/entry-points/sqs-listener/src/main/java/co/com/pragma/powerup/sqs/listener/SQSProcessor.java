@@ -5,13 +5,15 @@ import co.com.pragma.powerup.model.loanapplication.request.UpdateLoanStatusReque
 import co.com.pragma.powerup.usecase.loanapplication.LoanApplicationUseCase;
 import lombok.RequiredArgsConstructor;
 
-import org.reactivecommons.utils.ObjectMapper;
+import lombok.extern.log4j.Log4j2;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.services.sqs.model.Message;
 
 import java.util.function.Function;
 
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class SQSProcessor implements Function<Message, Mono<Void>> {
@@ -21,11 +23,18 @@ public class SQSProcessor implements Function<Message, Mono<Void>> {
 
     @Override
     public Mono<Void> apply(Message message) {
-        return Mono.just(objectMapper.map(message.body(), LoanStatusMessage.class))
-                .flatMap(msg ->
-                     loanApplicationUseCase.putLoanApp(new UpdateLoanStatusRequest(msg.getLoanId(), msg.getStatus()))
-                     .then()
-                )
-                ;
+        try {
+            log.info("Raw body: {}", message.body());
+
+            LoanStatusMessage msge = objectMapper.readValue(message.body(), LoanStatusMessage.class);
+            log.info("Mensaje recibido de la cola: {}", msge);
+
+            return loanApplicationUseCase.putLoanApp(
+                    new UpdateLoanStatusRequest(msge.getLoanId(), msge.getStatus())
+            ).then();
+        } catch (Exception e) {
+            log.error("Error parseando mensaje: {}", message.body(), e);
+            return Mono.error(e);
+        }
     }
 }

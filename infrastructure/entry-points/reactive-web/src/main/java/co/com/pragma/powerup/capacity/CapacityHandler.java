@@ -98,11 +98,14 @@ public class CapacityHandler {
     )
     public Mono<ServerResponse> calculateDebtCapacity(ServerRequest request) {
         log.info(Constants.LOG_CAPACITY_RECEIVED);
+        var exchange = request.exchange();
+        String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
         return request.bodyToMono(CapacityRequest.class)
                 .doOnNext(laReq -> log.debug(Constants.LOG_RECEIVED_DATA, laReq))
                 .flatMap(debtCapacityUseCase::calculateCapacity)
                 .doOnSuccess(la -> log.info(Constants.LOG_CAPACITY_CREATED))
                 .doOnError(error -> log.error(Constants.LOG_CAPACITY_ERROR))
-                .flatMap(la -> ServerResponse.ok().bodyValue(la));
+                .flatMap(la -> ServerResponse.ok().bodyValue(la))
+                .contextWrite(ctx -> ctx.put("authToken", authHeader != null ? authHeader: ""));
     }
 }

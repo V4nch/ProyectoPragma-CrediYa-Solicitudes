@@ -6,8 +6,8 @@ import co.com.pragma.powerup.model.exceptions.InvalidParameterException;
 import co.com.pragma.powerup.model.exceptions.UserNotFoundException;
 import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
-import co.com.pragma.powerup.model.loanapplication.gateways.NotificationQueueRepository;
 import co.com.pragma.powerup.model.loanapplication.gateways.ValidateQueueRepository;
+import co.com.pragma.powerup.model.loanapplication.messageSQS.ValidationMessage;
 import co.com.pragma.powerup.model.user.User;
 import co.com.pragma.powerup.model.user.gateways.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +28,6 @@ class DebtCapacityUseCaseTest {
     private LoanApplicationRepository loanApplicationRepository;
     private UserRepository userRepository;
     private ValidateQueueRepository validateQueueRepository;
-    private NotificationQueueRepository notificationQueueRepository;
 
     private DebtCapacityUseCase useCase;
 
@@ -37,13 +36,11 @@ class DebtCapacityUseCaseTest {
         loanApplicationRepository = mock(LoanApplicationRepository.class);
         userRepository = mock(UserRepository.class);
         validateQueueRepository = mock(ValidateQueueRepository.class);
-        notificationQueueRepository = mock(NotificationQueueRepository.class);
 
         useCase = new DebtCapacityUseCase(
                 loanApplicationRepository,
                 userRepository,
-                validateQueueRepository,
-                notificationQueueRepository
+                validateQueueRepository
         );
     }
 
@@ -72,8 +69,8 @@ class DebtCapacityUseCaseTest {
         when(userRepository.getUserByIdCard("123")).thenReturn(Mono.just(user));
         when(loanApplicationRepository.findApprovedLoansByIdCard("123"))
                 .thenReturn(Flux.just(approvedLoan));
-        when(validateQueueRepository.sendValidation(anyString())).thenReturn(Mono.empty());
-        when(notificationQueueRepository.sendNotification(anyString())).thenReturn(Mono.empty());
+        when(validateQueueRepository.sendValidation(any(ValidationMessage.class)))
+                .thenReturn(Mono.empty()); // 👈 ya no devuelve null
 
         StepVerifier.create(useCase.calculateCapacity(request))
                 .assertNext(response -> {

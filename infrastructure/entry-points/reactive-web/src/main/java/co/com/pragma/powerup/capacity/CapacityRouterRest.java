@@ -1,6 +1,5 @@
 package co.com.pragma.powerup.capacity;
 
-import co.com.pragma.powerup.api.LoanApplicationHandler;
 import co.com.pragma.powerup.model.utils.Constants;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;

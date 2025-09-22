@@ -86,11 +86,14 @@ public class LoanApplicationUseCase {
     }
 
     private Mono<LoanApplication> saveLoanApp(LoanApplication loanApp){
-        return  loanApplicationRepository.save(loanApp).thenReturn(loanApp);
+        return  loanApplicationRepository.save(loanApp)
+                .flatMap(la -> {
+                    loanApp.setLoanId(la.getLoanId());
+                    return Mono.just(loanApp);
+                });
     }
 
     private boolean requiresAutomaticValidation(LoanApplication loan) {
-        System.out.println(loan.getLoanType().isAutomaticValidation());
         return loan.getLoanType() != null
                 && loan.getLoanType().isAutomaticValidation();
     }

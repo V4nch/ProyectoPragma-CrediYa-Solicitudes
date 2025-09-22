@@ -9,6 +9,7 @@ import co.com.pragma.powerup.model.loanapplication.LoanApplication;
 import co.com.pragma.powerup.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.pragma.powerup.model.loanapplication.gateways.NotificationQueueRepository;
 import co.com.pragma.powerup.model.loanapplication.gateways.ValidateQueueRepository;
+import co.com.pragma.powerup.model.loanapplication.messageSQS.ValidationMessage;
 import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
 import co.com.pragma.powerup.model.user.User;
 import co.com.pragma.powerup.model.user.gateways.UserRepository;
@@ -26,7 +27,6 @@ public class DebtCapacityUseCase {
         private final UserRepository userRepository;
         private Double interestRate;
         private final ValidateQueueRepository validateQueueRepository;
-        private final NotificationQueueRepository notificationQueueRepository;
 
     private static final double RATIO = 0.35; // 35%
 
@@ -51,20 +51,20 @@ public class DebtCapacityUseCase {
         return loanApplicationRepository.findApprovedLoansByIdCard(user.getIdCard())
                 .collectList()
                 .map(existingLoans -> buildResponse(user, request, newLoanAnnualInterest, existingLoans))
-                .flatMap(this::sendMessageQueue)
-                .flatMap(capacityResponse ->
-                    notificationQueueRepository.sendNotification(
-                            String.format(
-                                    "{\"type\": \"%s\", \"loanId\": %d, \"paymentPlan\": %s }",
-                                    Constants.PAYMENT_PLAN,
-                                    request.getLoanId(),
-                                    capacityResponse.getPaymentPlan().toString()
-                            )
-                    ).then(Mono.just(capacityResponse)));
+                .flatMap(this::sendMessageQueue);
     }
 
-    private Mono<CapacityResponse> sendMessageQueue(CapacityResponse message){
-        return validateQueueRepository.sendValidation(message.toString())
+    private Mono<CapacityResponse> sendMessageQueue(CapacityResponse message) {
+        ValidationMessage validationMessage = new ValidationMessage(
+                message.getLoanId(),
+                message.getAmount(),
+                message.getNewLoanPayment(),
+                message.getAvailableCapacity(),
+                message.getBaseSalary(),
+                message.getPaymentPlan()
+        );
+
+        return validateQueueRepository.sendValidation(validationMessage) // 👈 no es String, es objeto
                 .thenReturn(message);
     }
 
