@@ -13,6 +13,7 @@ import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
 import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
 import co.com.pragma.powerup.model.loantype.LoanType;
 import co.com.pragma.powerup.model.loantype.gateways.LoanTypeRepository;
+import co.com.pragma.powerup.model.report.gateways.ReportSQSRepository;
 import co.com.pragma.powerup.model.status.Status;
 import co.com.pragma.powerup.model.status.gateways.StatusRepository;
 import co.com.pragma.powerup.model.user.User;
@@ -40,7 +41,7 @@ class RegisterLoanApplicationUseCaseTest {
     private UserRepository userRepository;
     private NotificationQueueRepository sqsRepository;
     private CapacityRestRepository capacityRestRepository;
-
+    private ReportSQSRepository reportSQSRepository;
 
     @BeforeEach
     void setUp() {
@@ -50,7 +51,7 @@ class RegisterLoanApplicationUseCaseTest {
         userRepository = mock(UserRepository.class);
         capacityRestRepository = mock(CapacityRestRepository.class);
         sqsRepository = mock(NotificationQueueRepository.class);
-
+        reportSQSRepository = mock(ReportSQSRepository.class);
 
         useCase = new LoanApplicationUseCase(
                 loanApplicationRepository,
@@ -58,7 +59,9 @@ class RegisterLoanApplicationUseCaseTest {
                 statusRepository,
                 userRepository,
                 sqsRepository,
-                capacityRestRepository
+                capacityRestRepository,
+                reportSQSRepository
+
         );
     }
 

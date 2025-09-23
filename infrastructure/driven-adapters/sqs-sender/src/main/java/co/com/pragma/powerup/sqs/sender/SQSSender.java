@@ -3,6 +3,7 @@ package co.com.pragma.powerup.sqs.sender;
 import co.com.pragma.powerup.model.loanapplication.gateways.NotificationQueueRepository;
 import co.com.pragma.powerup.model.loanapplication.gateways.ValidateQueueRepository;
 import co.com.pragma.powerup.model.loanapplication.messageSQS.ValidationMessage;
+import co.com.pragma.powerup.model.report.gateways.ReportSQSRepository;
 import co.com.pragma.powerup.sqs.sender.config.SQSSenderProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -17,7 +18,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 @Service
 @Log4j2
 @RequiredArgsConstructor
-public class SQSSender implements NotificationQueueRepository, ValidateQueueRepository {
+public class SQSSender implements NotificationQueueRepository, ValidateQueueRepository, ReportSQSRepository {
     private final SQSSenderProperties properties;
     private final SqsAsyncClient client;
     private final ObjectMapper objectMapper;
@@ -33,6 +34,9 @@ public class SQSSender implements NotificationQueueRepository, ValidateQueueRepo
         } catch (JsonProcessingException e) {
             return Mono.error(e);
         }
+    }
+    public Mono<String> sendReport(String message){
+        return send(properties.queueUrlReport(), message);
     }
 
     public Mono<String> send(String queueUrl, String message) {

@@ -27,13 +27,13 @@ public class SQSProcessor implements Function<Message, Mono<Void>> {
             log.info("Raw body: {}", message.body());
 
             LoanStatusMessage msge = objectMapper.readValue(message.body(), LoanStatusMessage.class);
-            log.info("Mensaje recibido de la cola: {}", msge);
+            log.info("Recieved messagge from SQS: {}", msge);
 
             return loanApplicationUseCase.putLoanApp(
                     new UpdateLoanStatusRequest(msge.getLoanId(), msge.getStatus())
             ).then();
         } catch (Exception e) {
-            log.error("Error parseando mensaje: {}", message.body(), e);
+            log.error("Error parsing message: {}", message.body(), e);
             return Mono.error(e);
         }
     }

@@ -45,6 +45,7 @@ adapter:
     region: "us-east-2"
     queueUrlNotify: "https://sqs.us-east-2.amazonaws.com/498606688180/solicitudes-status-queue"
     queueUrlValidate: "https://sqs.us-east-2.amazonaws.com/498606688180/solicitudes-validate-queue"
+    queueUrlReport: "https://sqs.us-east-2.amazonaws.com/498606688180/reporte-solicitud-queue"
 resilience4j:
   circuitbreaker:
     instances:

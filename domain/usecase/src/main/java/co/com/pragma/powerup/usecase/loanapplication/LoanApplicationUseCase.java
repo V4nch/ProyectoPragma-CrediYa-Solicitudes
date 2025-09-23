@@ -12,6 +12,7 @@ import co.com.pragma.powerup.model.loanapplication.response.PageResponse;
 import co.com.pragma.powerup.model.loanapplication.response.ResponseLoanApplication;
 import co.com.pragma.powerup.model.loantype.LoanType;
 import co.com.pragma.powerup.model.loantype.gateways.LoanTypeRepository;
+import co.com.pragma.powerup.model.report.gateways.ReportSQSRepository;
 import co.com.pragma.powerup.model.status.gateways.StatusRepository;
 import co.com.pragma.powerup.model.user.gateways.UserRepository;
 import co.com.pragma.powerup.model.utils.Constants;
@@ -28,6 +29,7 @@ public class LoanApplicationUseCase {
     private final UserRepository userRepository;
     private final NotificationQueueRepository notificationQueueRepository;
     private final CapacityRestRepository capacityRestRepository;
+    private final ReportSQSRepository reportSQSRepository;
 
     public Mono<ResponseLoanApplication> createLoanApplication(LoanApplication loanApplication,String idCard, String idCardFromToken){
         return getUserByIdCard(loanApplication, idCard, idCardFromToken)
@@ -67,10 +69,28 @@ public class LoanApplicationUseCase {
                         )
                     )
                     .thenReturn(
-                        new ResponseLoanApplication(updatedLoan, request.getNewStatus())
+                        updatedLoan
                     )
-            );
+            )
+                .flatMap(updatedLoan ->
+                    isApproved(updatedLoan, request.getNewStatus())
+                    .thenReturn(
+                        new ResponseLoanApplication(updatedLoan, request.getNewStatus())
+                    ))
+            ;
     }
+
+    private Mono<LoanApplication> isApproved(LoanApplication loanApplication,String newStatus){
+        return newStatus.equals("Aprobado") ?
+                reportSQSRepository.sendReport(
+                String.format(
+                        "{\"amount\": %.2f, \"statusCount\": %d}",
+                        loanApplication.getAmount(),
+                        1
+                )).thenReturn(loanApplication)
+        : Mono.just(loanApplication);
+    }
+
     private Mono<LoanApplication> attachLoanType(LoanApplication loanApp, LoanType loanType) {
         loanApp.setLoanType(loanType);
         return Mono.just(loanApp);

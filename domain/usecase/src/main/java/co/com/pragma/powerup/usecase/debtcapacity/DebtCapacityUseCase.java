@@ -64,7 +64,7 @@ public class DebtCapacityUseCase {
                 message.getPaymentPlan()
         );
 
-        return validateQueueRepository.sendValidation(validationMessage) // 👈 no es String, es objeto
+        return validateQueueRepository.sendValidation(validationMessage)
                 .thenReturn(message);
     }
 
