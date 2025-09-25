@@ -506,7 +506,7 @@ class RegisterLoanApplicationUseCaseTest {
         when(statusRepository.findByName("Aprobado")).thenReturn(Mono.just(status));
         when(loanApplicationRepository.updateStatus(1L, 2L)).thenReturn(Mono.just(loan));
         when(sqsRepository.sendNotification(anyString())).thenReturn(Mono.empty());
-
+        when(reportSQSRepository.sendReport(anyString())).thenReturn(Mono.empty()); // 👈 faltaba este
 
         StepVerifier.create(useCase.putLoanApp(request))
                 .expectNextMatches(resp ->
@@ -514,6 +514,37 @@ class RegisterLoanApplicationUseCaseTest {
                                 && "Aprobado".equals(resp.getStatusLoanApplication())
                 )
                 .verifyComplete();
+    }
+    @Test
+    void putLoanApp_notApproved() {
+        UpdateLoanStatusRequest request = new UpdateLoanStatusRequest(1L, "Rechazado");
+
+        LoanApplication loan = LoanApplication.builder()
+                .email("loan@mail.com")
+                .idLoanType(1L)
+                .idStatus(1L)
+                .build();
+
+        Status status = new Status();
+        status.setIdStatus(3L);
+        status.setName("Rechazado");
+
+        when(loanApplicationRepository.findById(1L)).thenReturn(Mono.just(loan));
+        when(statusRepository.findByName("Rechazado")).thenReturn(Mono.just(status));
+        when(loanApplicationRepository.updateStatus(1L, 3L)).thenReturn(Mono.just(loan));
+        when(sqsRepository.sendNotification(anyString())).thenReturn(Mono.empty());
+        // 👀 En este caso, NUNCA debería llamar reportSQSRepository.sendReport()
+        // por lo que ni siquiera hace falta mockearlo aquí.
+
+        StepVerifier.create(useCase.putLoanApp(request))
+                .expectNextMatches(resp ->
+                        resp.getLoanApplication().getEmail().equals("loan@mail.com")
+                                && "Rechazado".equals(resp.getStatusLoanApplication())
+                )
+                .verifyComplete();
+
+        // Verificamos que sendReport nunca fue llamado
+        verify(reportSQSRepository, never()).sendReport(anyString());
     }
 
     @Test
